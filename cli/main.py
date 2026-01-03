@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 
 from cli.corr_cmd import add_corr_subcommand
+from cli.costs_cmd import add_costs_subcommand
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -14,11 +15,14 @@ def main(argv: list[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 
     add_corr_subcommand(subparsers)
+    add_costs_subcommand(subparsers)
 
     args = parser.parse_args(argv)
 
     # Dispatch
     if args.subcommand == "corr":
+        return args._handler(args)
+    elif args.subcommand == "costs":
         return args._handler(args)
 
     parser.error(f"Unknown subcommand: {args.subcommand}")
