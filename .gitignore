@@ -8,3 +8,4 @@ build/
 *.egg-info/
 .DS_Store
 quantlib.spec
+.vscode/
