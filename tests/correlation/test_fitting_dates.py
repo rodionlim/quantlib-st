@@ -8,7 +8,7 @@ from correlation.fitting_dates import (
 )
 
 
-def _make_df(start: str, end: str, freq: str = "M") -> pd.DataFrame:
+def _make_df(start: str, end: str, freq: str = "ME") -> pd.DataFrame:
     idx = pd.date_range(start, end, freq=freq)
     return pd.DataFrame(index=idx, data={"x": 0})
 

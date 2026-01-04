@@ -1,25 +1,40 @@
 from __future__ import annotations
 
-import ast
 from pathlib import Path
+import tomllib
 
 
-def get_version_from_setup_py(setup_py: Path) -> str:
-    tree = ast.parse(setup_py.read_text(encoding="utf-8"), filename=str(setup_py))
+def get_version_from_pyproject(pyproject: Path) -> str:
+    """Read `pyproject.toml` and return the project version.
 
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "setup":
-            for kw in node.keywords:
-                if kw.arg == "version" and isinstance(kw.value, ast.Constant):
-                    if isinstance(kw.value.value, str):
-                        return kw.value.value
+    Tries PEP 621 `[project].version` first, then falls back to
+    Poetry-style `[tool.poetry].version`.
+    """
+    data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
 
-    raise RuntimeError("Could not find a string literal version=... in setup.py")
+    project = data.get("project")
+    if isinstance(project, dict):
+        version = project.get("version")
+        if isinstance(version, str):
+            return version
+
+    # Fallback: Poetry-style pyproject
+    tool = data.get("tool")
+    if isinstance(tool, dict):
+        poetry = tool.get("poetry")
+        if isinstance(poetry, dict):
+            version = poetry.get("version")
+            if isinstance(version, str):
+                return version
+
+    raise RuntimeError(
+        "Could not find 'version' in pyproject.toml (checked [project] and [tool.poetry])"
+    )
 
 
 def main() -> None:
-    setup_py = Path(__file__).resolve().parents[1] / "setup.py"
-    print(get_version_from_setup_py(setup_py))
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    print(get_version_from_pyproject(pyproject))
 
 
 if __name__ == "__main__":

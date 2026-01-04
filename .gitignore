@@ -9,3 +9,6 @@ build/
 .DS_Store
 quantlib.spec
 .vscode/
+*.whl
+*.tar.gz
+dist-pypi/

@@ -14,7 +14,7 @@ LINUX_BUILD_IMAGE ?= python:3.12-slim
 
 PYPI_DIST := dist-pypi
 # In CI, set DOCKER_IMAGE=ghcr.io/<owner>/<repo>
-DOCKER_IMAGE ?= rodionlim/quantlib
+DOCKER_IMAGE ?= rodionlim/quantlib-st
 
 .PHONY: help build build-local build-linux build-windows clean distclean test ensure-venv ensure-activate version publish-pypi publish-docker
 
