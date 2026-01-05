@@ -7,7 +7,7 @@ from io import StringIO
 
 import pandas as pd
 
-from correlation.correlation_over_time import (
+from quantlib_st.correlation.correlation_over_time import (
     correlation_over_time_for_returns,
     correlation_list_to_jsonable,
 )

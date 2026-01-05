@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from costs.config import InstrumentCostConfig
+
+from quantlib_st.costs.config import InstrumentCostConfig
 
 
 def calculate_annualized_volatility(

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 
-from cli.corr_cmd import add_corr_subcommand
-from cli.costs_cmd import add_costs_subcommand
+from quantlib_st.cli.corr_cmd import add_corr_subcommand
+from quantlib_st.cli.costs_cmd import add_costs_subcommand
 
 
 def main(argv: list[str] | None = None) -> int:

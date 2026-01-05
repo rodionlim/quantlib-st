@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 import pandas as pd
 
-from correlation.exponential_correlation import (
+from quantlib_st.correlation.exponential_correlation import (
     ExponentialCorrelationResults,
     CorrelationEstimate,
 )

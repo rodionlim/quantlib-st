@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
-from costs.config import InstrumentCostConfig
+from quantlib_st.costs.config import InstrumentCostConfig
 
 
 class CostDataSource(ABC):
