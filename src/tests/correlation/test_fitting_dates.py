@@ -1,6 +1,6 @@
 import pandas as pd
 
-from correlation.fitting_dates import (
+from quantlib_st.correlation.fitting_dates import (
     generate_fitting_dates,
     IN_SAMPLE,
     EXPANDING,
