@@ -60,6 +60,44 @@ def correlation_over_time_for_returns(
     forward_fill_price_index: bool = True,
     **kwargs,
 ) -> CorrelationList:
+    """Construct a CorrelationList from a DataFrame of returns.
+
+    This helper builds a synthetic price index by cumulatively summing the
+    provided returns, optionally forward-filling missing values, resampling the
+    price index at the requested ``frequency`` and converting back to returns
+    (diff) before delegating to :func:`correlation_over_time` to compute the
+    correlations over time.
+
+    Parameters
+    ----------
+    returns_for_correlation : pd.DataFrame
+        Input returns; rows should be indexed by a datetime-like index. If the
+        index is not datetime-like, resampling may fail — callers should coerce
+        or set a datetime index prior to calling.
+    frequency : str, optional
+        Resampling frequency passed to ``DataFrame.resample`` (default: "D").
+    forward_fill_price_index : bool, optional
+        Forward-fill the synthetic price index prior to resampling (default:
+        True). Useful when short gaps exist in the input returns.
+    **kwargs :
+        All other keyword arguments are forwarded to :func:`correlation_over_time`.
+        Common options include:
+          - ``date_method``: str ("in_sample", "expanding", ...)
+          - ``rollyears``: int
+          - ``interval_frequency``: str (e.g., "7D", "12M")
+          - ``using_exponent``: bool
+          - ``ew_lookback``: int
+          - ``min_periods``: int
+          - ``no_data_offdiag``: float
+          - ``floor_at_zero``: bool
+          - ``clip``: float | None
+          - ``shrinkage``: float
+
+    Returns
+    -------
+    CorrelationList
+        The computed correlation list object (see :class:`CorrelationList`).
+    """
     # Build a synthetic price index from returns, resample, then diff.
     # For daily frequency, this is essentially a no-op aside from losing the first row.
     index_prices_for_correlation = returns_for_correlation.cumsum()
