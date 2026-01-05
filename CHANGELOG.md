@@ -1,3 +1,23 @@
+## [1.1.0] - 2026-01-05
+
+### 🚀 Features
+
+- Add new pypi publish manual workflow and refactor reusable workflows
+- Add new correlation format and update readme docs
+
+### 🐛 Bug Fixes
+
+- Bug with license metadata preventing pypi publish
+- Bug with license metadata
+
+### 📚 Documentation
+
+- Remove build section
+
+### ⚙️ Miscellaneous Tasks
+
+- Add badges to readme
+
 ## [1.0.0] - 2026-01-05
 
 ### 🚀 Features
