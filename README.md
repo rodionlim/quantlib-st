@@ -20,14 +20,6 @@ From the repo root:
 
 This installs the `quantlib` command.
 
-## Build a single binary with PyInstaller
-
-From `quantlib/`:
-
-- `make build`
-
-Binary will be at `dist/quantlib`.
-
 ## Docker
 
 Pull a published image from GitHub Container Registry:
@@ -41,3 +33,28 @@ Run a quick correlation query by piping a CSV into the container (one-liner):
 When publishing the image the Makefile also tags and pushes `:latest` in addition to the versioned tag.
 
 ## Package Sample Usage
+
+```python
+import pandas as pd
+import numpy as np
+
+from quantlib_st import correlation
+
+# Sample data
+data = pd.DataFrame(
+    np.random.randn(100, 3),
+    columns=['Asset_A', 'Asset_B', 'Asset_C'],
+    index=pd.date_range(start='2020-01-01', periods=100, freq='D')  # daily dates
+)
+# Compute correlation matrix
+corr_matrix = correlation.correlation_over_time_for_returns(
+    data,
+    frequency='D', # resampling purpose
+    interval_frequency='7D',
+    date_method='expanding',
+    ew_lookback=50,
+    min_periods=10
+)
+print(corr_matrix.as_("jsonable"))
+print(corr_matrix.as_("long"))
+```

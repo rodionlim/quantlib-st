@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import datetime
-from dataclasses import dataclass
-
 import pandas as pd
+
+from dataclasses import dataclass
+from typing import Literal
 
 from .fitting_dates import generate_fitting_dates, listOfFittingDates
 from .exponential_correlation import (
@@ -20,6 +21,38 @@ class CorrelationList:
     column_names: list[str]
     fit_dates: listOfFittingDates
 
+    def as_(
+        self, fmt: Literal["jsonable", "long", "original"] = "jsonable"
+    ) -> dict | list[dict] | CorrelationList:
+        """Return the correlation list in a requested format.
+
+        Parameters
+        ----------
+        fmt : str
+            One of:
+            - "jsonable" (default) -> returns the JSON-serializable dict produced
+              by :func:`correlation_list_to_jsonable`.
+            - "long" -> returns a list of tidy records (dicts) produced by
+              :func:`jsonable_to_long` (uses the jsonable form internally).
+            - "original" -> returns the original :class:`CorrelationList` object.
+
+        Rationale
+        ---------
+        - A single accessor on the data structure makes it easy for callers to
+          request the representation they need (API response, UI-friendly long
+          table, or raw object for further processing).
+        - The method delegates to existing helpers to avoid duplicate logic and
+          ensures consistent serialization/conversion.
+        """
+        key = fmt.lower()
+        if key in ("jsonable", "json", "dict"):
+            return correlation_list_to_jsonable(self)
+        if key in ("long", "long_format", "records"):
+            return jsonable_to_long(correlation_list_to_jsonable(self))
+        if key in ("original", "self"):
+            return self
+        raise ValueError(f"Unknown format: {fmt}")
+
 
 def correlation_over_time_for_returns(
     returns_for_correlation: pd.DataFrame,
@@ -33,7 +66,9 @@ def correlation_over_time_for_returns(
     if forward_fill_price_index:
         index_prices_for_correlation = index_prices_for_correlation.ffill()
 
-    index_prices_for_correlation = index_prices_for_correlation.resample(frequency).last()
+    index_prices_for_correlation = index_prices_for_correlation.resample(
+        frequency
+    ).last()
     returns_for_correlation = index_prices_for_correlation.diff()
 
     return correlation_over_time(returns_for_correlation, **kwargs)
@@ -112,7 +147,9 @@ def correlation_over_time(
             )
             corr_list.append(corr)
 
-    return CorrelationList(corr_list=corr_list, column_names=column_names, fit_dates=fit_dates)
+    return CorrelationList(
+        corr_list=corr_list, column_names=column_names, fit_dates=fit_dates
+    )
 
 
 def correlation_list_to_jsonable(corr_list: CorrelationList) -> dict:
@@ -133,6 +170,47 @@ def correlation_list_to_jsonable(corr_list: CorrelationList) -> dict:
         "columns": list(corr_list.column_names),
         "periods": periods,
     }
+
+
+def jsonable_to_long(jsonable: dict) -> list[dict]:
+    """Convert correlation-list jsonable -> long records.
+
+    Rationale:
+    - Long (tidy) format of (date, pair, value, metadata) is easy to consume in UIs
+      for line charts, data grids, and CSV export. It avoids nested matrices and
+      simplifies filtering/aggregation on the client side.
+    - This helper uses the *fit_end* as the canonical timestamp for each period
+      (this makes the point represent the end of the fitting window); change if
+      you prefer *period_start* or *fit_start* instead.
+    - Converts missing/NaN values to ``None`` so JSON serialization yields
+      ``null`` which is convenient for JavaScript charting libraries.
+
+    Returns
+    -------
+    list[dict]
+        Rows with keys: ``date``, ``pair``, ``value``, ``fit_start``, ``fit_end``,
+        ``period_start``, ``period_end``, ``no_data``.
+    """
+    rows: list[dict] = []
+    cols = jsonable["columns"]
+    for p in jsonable["periods"]:
+        date = p["fit_end"]
+        meta = {
+            "fit_start": p["fit_start"],
+            "fit_end": p["fit_end"],
+            "period_start": p["period_start"],
+            "period_end": p["period_end"],
+            "no_data": p.get("no_data", False),
+        }
+        mat = p["correlation"]["values"]
+        for i, a in enumerate(cols):
+            for j, b in enumerate(cols):
+                if j <= i:
+                    continue
+                val = mat[i][j]
+                val = None if pd.isna(val) else val
+                rows.append({"date": date, "pair": f"{a}__{b}", "value": val, **meta})
+    return rows
 
 
 def _dt_to_iso(dt: datetime.datetime) -> str:
