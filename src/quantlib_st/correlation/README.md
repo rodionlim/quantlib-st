@@ -7,7 +7,8 @@ This module computes correlation matrices over time from data series.
 Input CSV format: first column is a datetime index; remaining columns are values to compute correlationagainst.
 
 ```bash
-cat returns.csv | quantlib corr > correlations.json
+cat sample_data/returns_10x4.csv | quantlib corr > correlations.json
+cat sample_data/returns_10x4.csv | ./dist/quantlib corr
 ```
 
 ### Common Options
