@@ -5,13 +5,6 @@ import json
 import sys
 from io import StringIO
 
-import pandas as pd
-
-from quantlib_st.correlation.correlation_over_time import (
-    correlation_over_time_for_returns,
-    correlation_list_to_jsonable,
-)
-
 
 def add_corr_subcommand(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
@@ -98,6 +91,12 @@ def add_corr_subcommand(subparsers: argparse._SubParsersAction) -> None:
 
 
 def run_corr(args: argparse.Namespace) -> int:
+    import pandas as pd
+    from quantlib_st.correlation.correlation_over_time import (
+        correlation_over_time_for_returns,
+        correlation_list_to_jsonable,
+    )
+
     csv_text = sys.stdin.read()
     if not csv_text.strip():
         print(json.dumps({"error": "no input on stdin"}), file=sys.stderr)

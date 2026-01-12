@@ -3,16 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import pandas as pd
 from io import StringIO
-
-from quantlib_st.costs.data_source import ConfigFileCostDataSource, IBKRCostDataSource
-from quantlib_st.costs.calculator import (
-    calculate_sr_cost,
-    calculate_annualized_volatility,
-    calculate_recent_average_price,
-    calculate_cost_percentage_terms,
-)
 
 
 def add_costs_subcommand(subparsers: argparse._SubParsersAction) -> None:
@@ -50,6 +41,15 @@ def add_costs_subcommand(subparsers: argparse._SubParsersAction) -> None:
 
 
 def handle_costs(args: argparse.Namespace) -> int:
+    import pandas as pd
+    from quantlib_st.costs.data_source import ConfigFileCostDataSource, IBKRCostDataSource
+    from quantlib_st.costs.calculator import (
+        calculate_sr_cost,
+        calculate_annualized_volatility,
+        calculate_recent_average_price,
+        calculate_cost_percentage_terms,
+    )
+
     # 1. Get Cost Config
     if args.use_ibkr:
         data_source = IBKRCostDataSource()
