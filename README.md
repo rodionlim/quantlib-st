@@ -8,8 +8,8 @@ Minimal, self-contained CLI tools and library for quantitative finance.
 
 ## Subcommands
 
-- **[corr](src/correlation/README.md)**: Compute correlation matrices over time from returns.
-- **[costs](src/src/costs/README.md)**: Calculate Sharpe Ratio (SR) costs for instruments based on spread and fees.
+- **[corr](src/quantlib_st/correlation/README.md)**: Compute correlation matrices over time from returns.
+- **[costs](src/quantlib_st/costs/README.md)**: Calculate Sharpe Ratio (SR) costs for instruments based on spread and fees.
 
 ## Install (editable - for developers)
 
@@ -47,8 +47,9 @@ data = pd.DataFrame(
     index=pd.date_range(start='2020-01-01', periods=100, freq='D')  # daily dates
 )
 # Compute correlation matrix
-corr_matrix = correlation.correlation_over_time_for_returns(
+corr_matrix = correlation.correlation_over_time(
     data,
+    is_price_series=False,
     frequency='D', # resampling purpose
     interval_frequency='7D',
     date_method='expanding',

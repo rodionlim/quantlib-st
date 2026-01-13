@@ -18,6 +18,8 @@ cat sample_data/returns_10x4.csv | ./dist/quantlib corr
 - `--rollyears 20`: Used only when `--date-method rolling`.
 - `--interval-frequency 12M`: Controls how often a new correlation matrix is emitted.
 - `--ew-lookback 250` and `--min-periods 20`: Parameters for EWMA estimation.
+- `--is-price-series`: Treat input data as price series and convert to lognormal returns.
+- `--convert-to-lognormal`: When input data are price series or arithmetic returns, convert to lognormal returns.
 
 ### Key concepts
 

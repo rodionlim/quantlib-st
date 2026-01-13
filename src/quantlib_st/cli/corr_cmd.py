@@ -79,6 +79,12 @@ def add_corr_subcommand(subparsers: argparse._SubParsersAction) -> None:
         default=True,
         help="Forward fill the synthetic price index before resampling (default: true)",
     )
+    parser.add_argument(
+        "--is-price-series",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="If true, treat input as prices. If false (default), treat as returns.",
+    )
 
     parser.add_argument(
         "--index-col",
@@ -93,7 +99,7 @@ def add_corr_subcommand(subparsers: argparse._SubParsersAction) -> None:
 def run_corr(args: argparse.Namespace) -> int:
     import pandas as pd
     from quantlib_st.correlation.correlation_over_time import (
-        correlation_over_time_for_returns,
+        correlation_over_time,
         correlation_list_to_jsonable,
     )
 
@@ -110,10 +116,11 @@ def run_corr(args: argparse.Namespace) -> int:
 
     df = df.sort_index()
 
-    corr_list = correlation_over_time_for_returns(
+    corr_list = correlation_over_time(
         df,
         frequency=args.frequency,
         forward_fill_price_index=args.forward_fill_price_index,
+        is_price_series=args.is_price_series,
         date_method=args.date_method,
         rollyears=args.rollyears,
         interval_frequency=args.interval_frequency,

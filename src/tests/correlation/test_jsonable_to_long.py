@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 from quantlib_st.correlation.correlation_over_time import (
-    correlation_over_time_for_returns,
+    correlation_over_time,
     correlation_list_to_jsonable,
     jsonable_to_long,
 )
@@ -16,7 +16,7 @@ def test_jsonable_to_long_expanding_multiple_periods():
         index=pd.date_range(start="2020-01-01", periods=100, freq="D"),
     )
 
-    cl = correlation_over_time_for_returns(
+    cl = correlation_over_time(
         data,
         frequency="D",
         date_method="expanding",

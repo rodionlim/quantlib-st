@@ -2,11 +2,13 @@ APP_NAME := quantlib
 ENTRY := quantlib_launcher.py
 SPEC := quantlib.spec
 DIST := dist
-PYINSTALLER_OPTS := --clean --noconfirm --onefile
+PYINSTALLER_OPTS := --clean --noconfirm
 PYINSTALLER_OPTS_SPEC := --clean --noconfirm
 
 PYTHON ?= python3
 VERSION := $(shell $(PYTHON) scripts/get_version.py 2>/dev/null)
+TARBALL_NAME := $(APP_NAME)-$(VERSION).tar.gz
+TARBALL := $(DIST)/$(TARBALL_NAME)
 
 # Default Linux build image; manual release workflow will override this to
 # ghcr.io/astral-sh/uv:python3.12-alpine
@@ -90,7 +92,8 @@ build-local: ensure-venv ensure-activate
 	else \
 		pyinstaller $(PYINSTALLER_OPTS) --name $(APP_NAME) $(ENTRY); \
 	fi
-
+	@echo "Creating tarball $(TARBALL)..."
+	@tar -czf $(TARBALL) -C $(DIST) $(APP_NAME)
 
 # Build a Linux executable using an official Python Docker image. This is the
 # recommended approach when your host is non-Linux but you want a Linux binary.
@@ -101,8 +104,10 @@ build-linux:
 		if command -v uv >/dev/null 2>&1; then uv pip install --system pyinstaller; else python -m pip install --upgrade pip pyinstaller; fi; \
 		# Install the project so imports under src/ are discoverable by PyInstaller
 		python -m pip install .; \
-		if [ -f $(SPEC) ]; then pyinstaller $(PYINSTALLER_OPTS_SPEC) $(SPEC); else pyinstaller $(PYINSTALLER_OPTS) --name $(APP_NAME) $(ENTRY); fi\
-	"
+		if [ -f $(SPEC) ]; then pyinstaller $(PYINSTALLER_OPTS_SPEC) $(SPEC); else pyinstaller $(PYINSTALLER_OPTS) --name $(APP_NAME) $(ENTRY); fi; \
+		echo \"Creating tarball $(TARBALL)...\"; \
+		tar -czf $(TARBALL) -C dist quantlib \
+	\"
 
 # Windows builds are not supported by this Makefile. Use a Windows host or CI.
 build-windows:
