@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import numpy as np
 import pandas as pd
 
 from dataclasses import dataclass
@@ -54,65 +55,80 @@ class CorrelationList:
         raise ValueError(f"Unknown format: {fmt}")
 
 
-def correlation_over_time_for_returns(
-    returns_for_correlation: pd.DataFrame,
+def correlation_over_time(
+    data_for_correlation: pd.DataFrame,
     frequency: str = "D",
     forward_fill_price_index: bool = True,
+    is_price_series: bool = False,
     **kwargs,
 ) -> CorrelationList:
-    """Construct a CorrelationList from a DataFrame of returns.
+    """Construct a CorrelationList from a DataFrame of returns or prices.
 
-    This helper builds a synthetic price index by cumulatively summing the
-    provided returns, optionally forward-filling missing values, resampling the
-    price index at the requested ``frequency`` and converting back to returns
-    (diff) before delegating to :func:`correlation_over_time` to compute the
-    correlations over time.
+    This helper builds a (log) price index, optionally forward-filling missing
+    values, resampling at the requested ``frequency``, and converting back to
+    returns (diff) before delegating to :func:`compute_correlation_over_time`.
+
+    Input Requirement
+    -----------------
+    - If ``is_price_series=True``, input is expected to be a raw Price series.
+      It will be converted to log-prices internally so that resampling and
+      differencing yields log-normal returns.
+    - If ``is_price_series=False``, input is expected to be log-normal returns.
 
     Parameters
     ----------
-    returns_for_correlation : pd.DataFrame
-        Input returns; rows should be indexed by a datetime-like index. If the
-        index is not datetime-like, resampling may fail — callers should coerce
-        or set a datetime index prior to calling.
+    data_for_correlation : pd.DataFrame
+        Input data; rows should be indexed by a datetime-like index.
     frequency : str, optional
         Resampling frequency passed to ``DataFrame.resample`` (default: "D").
     forward_fill_price_index : bool, optional
-        Forward-fill the synthetic price index prior to resampling (default:
-        True). Useful when short gaps exist in the input returns.
+        Forward-fill the price index prior to resampling (default: True).
+    is_price_series : bool, optional
+        If True, treat input as a price index and log-transform it. If False
+        (default), treat input as log-normal returns.
     **kwargs :
-        All other keyword arguments are forwarded to :func:`correlation_over_time`.
-        Common options include:
-          - ``date_method``: str ("in_sample", "expanding", ...)
-          - ``rollyears``: int
-          - ``interval_frequency``: str (e.g., "7D", "12M")
-          - ``using_exponent``: bool
-          - ``ew_lookback``: int
-          - ``min_periods``: int
-          - ``no_data_offdiag``: float
-          - ``floor_at_zero``: bool
-          - ``clip``: float | None
-          - ``shrinkage``: float
-
-    Returns
-    -------
-    CorrelationList
-        The computed correlation list object (see :class:`CorrelationList`).
+        All other keyword arguments are forwarded to :func:`compute_correlation_over_time`.
     """
-    # Build a synthetic price index from returns, resample, then diff.
-    # For daily frequency, this is essentially a no-op aside from losing the first row.
-    index_prices_for_correlation = returns_for_correlation.cumsum()
+    # 1. Determine the (log) Price Index
+    if is_price_series:
+        # Input is Price P; we want ln(P) so that diff() yields log-returns.
+        index_prices_for_correlation = pd.DataFrame(
+            np.log(data_for_correlation),
+            index=data_for_correlation.index,
+            columns=data_for_correlation.columns,
+        )
+    else:
+        # Input is log-normal returns; cumsum yields the log-price index.
+        index_prices_for_correlation = data_for_correlation.cumsum()
+
+    # 2. Forward fill if requested
     if forward_fill_price_index:
         index_prices_for_correlation = index_prices_for_correlation.ffill()
 
+    # 3. Resample and diff to get log-normal returns
     index_prices_for_correlation = index_prices_for_correlation.resample(
         frequency
     ).last()
     returns_for_correlation = index_prices_for_correlation.diff()
 
-    return correlation_over_time(returns_for_correlation, **kwargs)
+    return compute_correlation_over_time(returns_for_correlation, **kwargs)
 
 
-def correlation_over_time(
+def correlation_over_time_for_price(
+    data_for_correlation: pd.DataFrame, **kwargs
+) -> CorrelationList:
+    """Wrapper for correlation_over_time when input is a price series."""
+    return correlation_over_time(data_for_correlation, is_price_series=True, **kwargs)
+
+
+def correlation_over_time_for_returns(
+    data_for_correlation: pd.DataFrame, **kwargs
+) -> CorrelationList:
+    """Wrapper for correlation_over_time when input is a returns series."""
+    return correlation_over_time(data_for_correlation, is_price_series=False, **kwargs)
+
+
+def compute_correlation_over_time(
     data_for_correlation: pd.DataFrame,
     date_method: str = "in_sample",
     rollyears: int = 20,

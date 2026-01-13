@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from quantlib_st.correlation.correlation_over_time import (
-    correlation_over_time_for_returns,
+    correlation_over_time,
 )
 
 
@@ -14,7 +14,7 @@ def test_correlationlist_as_variants():
         index=pd.date_range(start="2020-01-01", periods=100, freq="D"),
     )
 
-    cl = correlation_over_time_for_returns(
+    cl = correlation_over_time(
         data,
         frequency="D",
         date_method="expanding",
@@ -40,4 +40,4 @@ def test_correlationlist_as_variants():
 
     # unknown
     with pytest.raises(ValueError):
-        cl.as_("unsupported-form")
+        cl.as_("unsupported-form")  # type: ignore
