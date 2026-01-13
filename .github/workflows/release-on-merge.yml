@@ -126,4 +126,4 @@ jobs:
           body: ${{ steps.git-cliff-current.outputs.content }}
           allowUpdates: true
           generateReleaseNotes: false
-          artifacts: "dist/quantlib"
+          artifacts: "dist/*.tar.gz"
