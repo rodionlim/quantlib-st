@@ -20,9 +20,10 @@ def main(argv: list[str] | None = None) -> int:
         prog="quantlib",
         description="quantlib CLI (corr is the first subcommand; more will be added).",
     )
-    
+
     parser.add_argument(
-        "-v", "--version",
+        "-v",
+        "--version",
         action="version",
         version=f"%(prog)s {get_version()}",
     )
