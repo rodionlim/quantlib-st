@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+
 from io import StringIO
 
 
@@ -42,7 +43,10 @@ def add_costs_subcommand(subparsers: argparse._SubParsersAction) -> None:
 
 def handle_costs(args: argparse.Namespace) -> int:
     import pandas as pd
-    from quantlib_st.costs.data_source import ConfigFileCostDataSource, IBKRCostDataSource
+    from quantlib_st.costs.data_source import (
+        ConfigFileCostDataSource,
+        IBKRCostDataSource,
+    )
     from quantlib_st.costs.calculator import (
         calculate_sr_cost,
         calculate_annualized_volatility,

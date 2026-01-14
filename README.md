@@ -11,6 +11,10 @@ Minimal, self-contained CLI tools and library for quantitative finance.
 - **[corr](src/quantlib_st/correlation/README.md)**: Compute correlation matrices over time from returns.
 - **[costs](src/quantlib_st/costs/README.md)**: Calculate Sharpe Ratio (SR) costs for instruments based on spread and fees.
 
+## Modules
+
+- **[estimators](src/quantlib_st/estimators/README.md)**: Volatility estimators — contains `robust_vol_calc` and `mixed_vol_calc` for daily volatility estimation.
+
 ## Install (editable - for developers)
 
 From the repo root:
