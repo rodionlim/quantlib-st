@@ -6,7 +6,7 @@ Small, focused volatility estimators.
 
 - **mixed_vol_calc** — Blends short-term (robust) vol with a long-term slow vol component.
 
-Usage example
+## Usage example
 
 ```python
 from quantlib_st.estimators.vol import robust_vol_calc
