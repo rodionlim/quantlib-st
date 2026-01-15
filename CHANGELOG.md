@@ -1,3 +1,14 @@
+## [1.5.0] - 2026-01-15
+
+### 🚀 Features
+
+- Add calc_ewmac_forecast default algorithm
+- Add accounts and pandl calculator
+
+### 📚 Documentation
+
+- Add base docs on system
+
 ## [1.4.0] - 2026-01-14
 
 ### 🚀 Features

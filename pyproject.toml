@@ -3,7 +3,7 @@ name = "quantlib-st"
 authors = [
   { name="Rodion Lim", email="rodion.lim@gmail.com" },
 ]
-version = "1.4.0"
+version = "1.5.0"
 description = "A quantitative finance library and cli for systematic trading"
 readme = "README.md"
 requires-python = ">=3.11"
