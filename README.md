@@ -13,7 +13,7 @@ Minimal, self-contained CLI tools and library for quantitative finance.
 
 ## Modules
 
-- **[estimators](src/quantlib_st/estimators/README.md)**: Volatility estimators — contains `robust_vol_calc` and `mixed_vol_calc` for daily volatility estimation.
+- **[estimators](src/quantlib_st/estimators/README.md)**: Volatility and Forecast Scalar estimators — contains `robust_vol_calc` and `mixed_vol_calc` for daily volatility estimation, and `forecast_scalar` for scaling forecasts.
 - **[accounts](src/quantlib_st/accounts/README.md)**: P&L calculation framework — contains `account_forecast` for generating P&L curves from forecasts and prices.
 
 ## Install (editable - for developers)
@@ -24,6 +24,8 @@ From the repo root:
 - `python -m pip install -e .`
 
 This installs the `quantlib` command.
+
+- `uv sync --extra dev`
 
 ## Docker
 
@@ -38,6 +40,8 @@ Run a quick correlation query by piping a CSV into the container (one-liner):
 When publishing the image the Makefile also tags and pushes `:latest` in addition to the versioned tag.
 
 ## Package Sample Usage
+
+### Correlation
 
 ```python
 import pandas as pd

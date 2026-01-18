@@ -3,17 +3,226 @@ import pandas as pd
 from typing import Optional
 
 from quantlib_st.core.dateutils import ROOT_BDAYS_INYEAR
+from quantlib_st.core.pandas.pdutils import sum_series
+from quantlib_st.estimators.vol import robust_daily_vol_given_price
+
+from quantlib_st.systems.accounts.account_costs import accountCosts
 from quantlib_st.systems.accounts.curves.account_curve import accountCurve
 from quantlib_st.systems.accounts.pandl_calculators.pandl_SR_cost import (
     pandlCalculationWithSRCosts,
 )
-
-from quantlib_st.estimators.vol import robust_daily_vol_given_price
+from quantlib_st.systems.system_cache import diagnostic
 
 ARBITRARY_FORECAST_CAPITAL = 100
 ARBITRARY_FORECAST_ANNUAL_RISK_TARGET_PERCENTAGE = 0.16
 
 ARBITRARY_VALUE_OF_PRICE_POINT = 1.0
+
+
+class accountForecast(accountCosts):
+    @diagnostic(not_pickable=True)
+    def pandl_for_instrument_forecast_weighted_within_trading_rule(
+        self, instrument_code: str, rule_variation_name: str, delayfill: bool = True
+    ) -> accountCurve:
+        pandl_for_instrument_forecast = self.pandl_for_instrument_forecast(
+            instrument_code, rule_variation_name, delayfill=delayfill
+        )
+
+        weight = (
+            self._normalised_weight_for_forecast_and_instrument_within_trading_rule(
+                instrument_code, rule_variation_name=rule_variation_name
+            )
+        )
+
+        weighted_pandl = pandl_for_instrument_forecast.weight(weight)
+
+        return weighted_pandl
+
+    @diagnostic(not_pickable=True)
+    def pandl_for_instrument_forecast_weighted(
+        self, instrument_code: str, rule_variation_name: str, delayfill: bool = True
+    ) -> accountCurve:
+        pandl_for_instrument_forecast = self.pandl_for_instrument_forecast(
+            instrument_code, rule_variation_name, delayfill=delayfill
+        )
+
+        weight = self._normalised_weight_for_forecast_and_instrument(
+            instrument_code, rule_variation_name=rule_variation_name
+        )
+
+        weighted_pandl = pandl_for_instrument_forecast.weight(weight)
+
+        return weighted_pandl
+
+    @diagnostic()
+    def _normalised_weight_for_forecast_and_instrument_within_trading_rule(
+        self,
+        instrument_code: str,
+        rule_variation_name: str,
+    ) -> pd.Series:
+        weight = self._unnormalised_weight_for_forecast_and_instrument(
+            instrument_code=instrument_code, rule_variation_name=rule_variation_name
+        )
+
+        total_weight_for_rule = self._total_unnormalised_weight_for_trading_rule(
+            rule_variation_name
+        )
+        total_weight_aligned = total_weight_for_rule.reindex(weight.index).ffill()
+
+        normalised_weight = weight / total_weight_aligned
+
+        return normalised_weight
+
+    @diagnostic()
+    def _total_unnormalised_weight_for_trading_rule(
+        self, rule_variation_name: str
+    ) -> pd.Series:
+        list_of_instruments = self.get_instrument_list()
+
+        list_of_weights = [
+            self._unnormalised_weight_for_forecast_and_instrument(
+                instrument_code, rule_variation_name=rule_variation_name
+            )
+            for instrument_code in list_of_instruments
+        ]
+
+        sum_weights = sum_series(list_of_weights)
+
+        return sum_weights
+
+    @diagnostic()
+    def _normalised_weight_for_forecast_and_instrument(
+        self, instrument_code: str, rule_variation_name: str
+    ) -> pd.Series:
+        weight = self._unnormalised_weight_for_forecast_and_instrument(
+            instrument_code=instrument_code, rule_variation_name=rule_variation_name
+        )
+        total_weight = (
+            self._total_unnormalised_weight_across_all_instruments_and_forecasts()
+        )
+        total_weight_aligned = total_weight.reindex(weight.index).ffill()
+
+        normalised_weight = weight / total_weight_aligned
+
+        return normalised_weight
+
+    @diagnostic()
+    def _total_unnormalised_weight_across_all_instruments_and_forecasts(
+        self,
+    ) -> pd.Series:
+        list_of_instruments = self.get_instrument_list()
+        list_of_weights = [
+            self._total_unnormalised_weight_for_instrument(instrument_code)
+            for instrument_code in list_of_instruments
+        ]
+
+        sum_of_weights = sum_series(list_of_weights)
+
+        return sum_of_weights
+
+    @diagnostic()
+    def _total_unnormalised_weight_for_instrument(
+        self, instrument_code: str
+    ) -> pd.Series:
+        list_of_rules = self.list_of_rules_for_code(instrument_code)
+        list_of_weights = [
+            self._unnormalised_weight_for_forecast_and_instrument(
+                instrument_code, rule_variation_name
+            )
+            for rule_variation_name in list_of_rules
+        ]
+
+        sum_of_weights = sum_series(list_of_weights)
+
+        return sum_of_weights
+
+    @diagnostic()
+    def _unnormalised_weight_for_forecast_and_instrument(
+        self, instrument_code: str, rule_variation_name: str
+    ) -> pd.Series:
+        idm = self.instrument_diversification_multiplier()
+        fdm = self.forecast_diversification_multiplier(instrument_code)
+        instrument_weight = self.specific_instrument_weight(instrument_code)
+        forecast_weight = self.forecast_weight(
+            instrument_code=instrument_code, rule_variation_name=rule_variation_name
+        )
+
+        weighting_df = pd.concat([idm, fdm, instrument_weight, forecast_weight], axis=1)
+        weighting_df = weighting_df.ffill()
+        weighting_df = weighting_df.bfill()
+        joint_weight = weighting_df.product(axis=1)
+
+        return joint_weight
+
+    @diagnostic(not_pickable=True)
+    def pandl_for_instrument_forecast(
+        self, instrument_code: str, rule_variation_name: str, delayfill: bool = True
+    ) -> accountCurve:
+        """
+        Get the p&l for one instrument and forecast; as % of arbitrary capital
+
+        :param instrument_code: instrument to get values for
+        :type instrument_code: str
+
+        :param rule_variation_name: rule to get values for
+        :type rule_variation_name: str
+
+        :param delayfill: Lag fills by one day
+        :type delayfill: bool
+
+        :returns: accountCurve
+
+        >>> from systems.basesystem import System
+        >>> from systems.tests.testdata import get_test_object_futures_with_portfolios
+        >>> (portfolio, posobject, combobject, capobject, rules, rawdata, data, config)=get_test_object_futures_with_portfolios()
+        >>> system=System([portfolio, posobject, combobject, capobject, rules, rawdata, Account()], data, config)
+        >>>
+        >>> system.accounts.pandl_for_instrument_forecast("EDOLLAR", "ewmac8").ann_std()
+        0.20270495775586916
+
+        """
+
+        self.log.debug(
+            "Calculating pandl for instrument forecast for %s %s"
+            % (instrument_code, rule_variation_name),
+            instrument_code=instrument_code,
+        )
+
+        forecast = self.get_capped_forecast(instrument_code, rule_variation_name)
+
+        price = self.get_instrument_prices_for_position_or_forecast(
+            instrument_code=instrument_code, position_or_forecast=forecast
+        )
+
+        daily_returns_volatility = self.get_daily_returns_volatility(instrument_code)
+
+        # We NEVER use cash costs for forecasts ...
+        SR_cost = self.get_SR_cost_for_instrument_forecast(
+            instrument_code, rule_variation_name
+        )
+
+        target_abs_forecast = self.target_abs_forecast()
+
+        capital = self.get_notional_capital()
+        risk_target = self.get_annual_risk_target()
+        value_per_point = self.get_value_of_block_price_move(instrument_code)
+
+        fx = self.get_fx_rate(instrument_code)
+
+        pandl_fcast = pandl_for_instrument_forecast(
+            forecast,
+            price=price,
+            capital=capital,
+            fx=fx,
+            risk_target=risk_target,
+            daily_returns_volatility=daily_returns_volatility,
+            target_abs_forecast=target_abs_forecast,
+            SR_cost=SR_cost,
+            delayfill=delayfill,
+            value_per_point=value_per_point,
+        )
+
+        return pandl_fcast
 
 
 def pandl_for_instrument_forecast(

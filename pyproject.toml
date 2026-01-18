@@ -16,6 +16,7 @@ dependencies = [
   "numpy>=2.4.0",
   "pandas>=2.3.3",
   "scipy>=1.17.0",
+  "PyYAML>=6.0.2",
 ]
 
 [project.optional-dependencies]
@@ -41,8 +42,8 @@ where = ["src"]
 include = ["*"]
 
 [tool.pytest.ini_options]
-testpaths = ["src/tests"]
-pythonpath = ["src/quantlib_st"]
+testpaths = ["src", "tests"]
+pythonpath = ["src", "src/quantlib_st"]
 
 [build-system]
 requires = ["setuptools>=80.9", "wheel"]

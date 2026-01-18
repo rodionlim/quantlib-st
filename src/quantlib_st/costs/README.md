@@ -28,7 +28,11 @@ Volatility is calculated using a robust method:
 
 ### 3. Average Price
 
-Costs are calculated using the average price over the last year (256 business days) to ensure the estimate is not skewed by recent price spikes.
+Costs are calculated using the average price over the last year (256 business days). This ensures the cost estimate is representative of the entire period and serves three purposes:
+
+- **Percentage Commissions**: For instruments with percentage-based fees, the cost depends on the contract value ($\text{Price} \times \text{Point Size}$).
+- **Stability**: It prevents temporary price spikes or crashes from distorting long-term cost expectations.
+- **Consistency**: It matches the 256-day window used for the volatility calculation in the SR Cost denominator.
 
 ## Usage
 

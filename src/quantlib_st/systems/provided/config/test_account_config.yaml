@@ -1,0 +1,26 @@
+#YAML
+#
+# Raw data
+#
+#
+# Trading rules
+#
+#
+percentage_vol_target: 16.0
+notional_trading_capital: 250000
+base_currency: "USD"
+
+# Portfolio creation (minimal)
+instrument_weights:
+  EDOLLAR: 0.50
+  US10: 0.50
+instrument_div_multiplier: 1.00
+
+countries:
+  US:
+    - EDOLLAR
+    - US10
+asset_classes:
+  Rates:
+    - EDOLLAR
+    - US10
