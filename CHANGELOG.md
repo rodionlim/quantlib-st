@@ -1,3 +1,14 @@
+## [1.8.0] - 2026-01-19
+
+### 🚀 Features
+
+- *(forecast)* Add forecast_scale_cap stage
+
+### 🧪 Testing
+
+- Add forecasting minimal tests
+- *(forecast)* Add tests for forecast_scale_cap
+
 ## [1.7.0] - 2026-01-18
 
 ### 🚀 Features
