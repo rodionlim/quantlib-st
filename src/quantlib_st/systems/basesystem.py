@@ -1,4 +1,12 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from quantlib_st.systems.forecasting import Rules
+    from quantlib_st.systems.accounts.accounts_stage import Account
+    from quantlib_st.systems.rawdata import RawData
+
+    # from quantlib_st.systems.forecast_combine import ForecastCombine
+    from quantlib_st.systems.forecast_scale_cap import ForecastScaleCap
 
 from quantlib_st.config.configdata import Config
 from quantlib_st.config.instruments import (
@@ -39,6 +47,12 @@ class System(object):
     The system only has one method 'of its own' which is get_instrument_list
 
     """
+
+    rules: "Rules"
+    accounts: "Account"
+    rawdata: "RawData"
+    # combForecast: "ForecastCombine"
+    forecastScaleCap: "ForecastScaleCap"
 
     def __init__(
         self,
@@ -129,11 +143,11 @@ class System(object):
         return self._log
 
     @property
-    def data(self):
+    def data(self) -> simData:
         return self._data
 
     @property
-    def config(self):
+    def config(self) -> Config:
         return self._config
 
     @property

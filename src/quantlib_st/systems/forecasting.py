@@ -66,11 +66,12 @@ class Rules(SystemStage):
         return self._passed_trading_rules
 
     def __repr__(self):
-        trading_rules = self.trading_rules()
-
-        rule_names = ", ".join(trading_rules.keys())
-
-        return "Rules object with rules " + rule_names
+        try:
+            trading_rules = self.trading_rules()
+            rule_names = ", ".join(trading_rules.keys())
+            return "Rules object with rules " + rule_names
+        except Exception:
+            return "Rules object (uninitialized or error during initialization)"
 
     @output()
     def get_raw_forecast(
