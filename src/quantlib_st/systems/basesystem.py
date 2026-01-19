@@ -5,6 +5,9 @@ if TYPE_CHECKING:
     from quantlib_st.systems.accounts.accounts_stage import Account
     from quantlib_st.systems.rawdata import RawData
 
+    # from quantlib_st.systems.forecast_combine import ForecastCombine
+    from quantlib_st.systems.forecast_scale_cap import ForecastScaleCap
+
 from quantlib_st.config.configdata import Config
 from quantlib_st.config.instruments import (
     get_duplicate_list_of_instruments_to_remove_from_config,
@@ -48,6 +51,8 @@ class System(object):
     rules: "Rules"
     accounts: "Account"
     rawdata: "RawData"
+    # combForecast: "ForecastCombine"
+    forecastScaleCap: "ForecastScaleCap"
 
     def __init__(
         self,
@@ -138,11 +143,11 @@ class System(object):
         return self._log
 
     @property
-    def data(self):
+    def data(self) -> simData:
         return self._data
 
     @property
-    def config(self):
+    def config(self) -> Config:
         return self._config
 
     @property

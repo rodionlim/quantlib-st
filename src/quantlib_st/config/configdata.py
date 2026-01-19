@@ -13,7 +13,7 @@ trading_rules - a specification of the trading rules for a system
 """
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 import os
 import yaml
@@ -45,6 +45,14 @@ RESERVED_NAMES = [
 
 
 class Config(object):
+    # Common configuration attributes (type hints for IDE)
+    trading_rules: Any
+    forecast_scalar_estimate: Any
+    forecast_scalar_fixed: Any
+    instruments: Any
+    parameters: Any
+    base_currency: Any
+
     def __init__(
         self,
         config_object: Optional[Union[str, dict, list]] = None,
@@ -109,6 +117,14 @@ class Config(object):
             if element_name not in elements:
                 elements.append(element_name)
                 self._elements = elements
+
+    def __getattr__(self, name: str) -> Any:
+        # This allows Pylance to know that Config can have dynamic attributes
+        # and prevents "unknown attribute" errors.
+        # We only get here if the attribute isn't already defined in __dict__
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{name}'"
+        )
 
     def get_element(self, element_name):
         try:

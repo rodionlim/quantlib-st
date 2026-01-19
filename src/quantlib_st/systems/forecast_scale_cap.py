@@ -1,4 +1,8 @@
 from copy import copy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from quantlib_st.systems.forecast_combine import ForecastCombine
 
 import numpy as np
 import pandas as pd
@@ -272,6 +276,7 @@ class ForecastScaleCap(SystemStage):
         # This we get from here to avoid possible inconsistency
         target_abs_forecast = self.target_abs_forecast()
 
+        assert scalar_function is not None
         scaling_factor = scalar_function(
             cs_forecasts,
             target_abs_forecast=target_abs_forecast,
@@ -358,8 +363,7 @@ class ForecastScaleCap(SystemStage):
             return self.comb_forecast_stage.get_trading_rule_list(instrument_code)
 
     @property
-    def comb_forecast_stage(self):
-        # no use of -> as would cause circular import
+    def comb_forecast_stage(self) -> "ForecastCombine":
         return self.parent.combForecast
 
     @diagnostic()

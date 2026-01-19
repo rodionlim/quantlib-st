@@ -21,7 +21,7 @@ class SystemStage(object):
     """
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "Need to replace method when inheriting"
 
     def __repr__(self):
