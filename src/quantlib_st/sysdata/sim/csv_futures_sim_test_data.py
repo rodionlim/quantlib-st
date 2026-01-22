@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import datetime
+from typing import Optional
 
 from quantlib_st.sysdata.csv.csv_multiple_prices import csvFuturesMultiplePricesData
 from quantlib_st.sysdata.csv.csv_adjusted_prices import csvFuturesAdjustedPricesData
@@ -33,13 +34,18 @@ class CsvFuturesSimTestData(genericBlobUsingFuturesSimData):
     DEFAULT_END_DATE = datetime.strptime("2021-03-08 20:00:00", DATE_FORMAT)
 
     def __init__(
-        self, start_date=None, end_date=None, log=get_logger("csvFuturesSimTestData")
+        self,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        log=get_logger("csvFuturesSimTestData"),
     ):
         data = dataBlob(
             log=log,
             csv_data_paths=dict(
                 csvFuturesAdjustedPricesData="quantlib_st.data.test.adjusted_prices_csv",
                 csvFuturesInstrumentData="quantlib_st.data.test.csvconfig",
+                csvFuturesMultiplePricesData="quantlib_st.data.futures.multiple_prices_csv",
+                csvRollParametersData="quantlib_st.data.futures.roll_calendars_csv",
                 csvSpreadCostData="quantlib_st.data.test.csvconfig",
             ),
             class_list=[
@@ -86,7 +92,7 @@ class CsvFuturesSimTestData(genericBlobUsingFuturesSimData):
             instrument_code
         )
         date_adjusted = data[self.start_date : self.end_date]
-        return date_adjusted
+        return date_adjusted  # type: ignore
 
     def get_multiple_prices(self, instrument_code: str) -> futuresMultiplePrices:
         data = super().get_multiple_prices(instrument_code)
@@ -98,7 +104,7 @@ class CsvFuturesSimTestData(genericBlobUsingFuturesSimData):
     ) -> fxPrices:
         data = super().get_fx_for_instrument(instrument_code, base_currency)
         date_adjusted = data[self.start_date : self.end_date]
-        return date_adjusted
+        return date_adjusted  # type: ignore
 
     def daily_prices(self, instrument_code: str) -> pd.Series:
         data = super().daily_prices(instrument_code)

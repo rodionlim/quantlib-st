@@ -54,7 +54,7 @@ class baseData(object):
             "__getitem__ not defined for baseData class: use a class where it has been overridden"
         )
 
-    def keys(self):
+    def keys(self) -> list[str]:
         """
         list of things in this data set (futures contracts, instruments...)
 

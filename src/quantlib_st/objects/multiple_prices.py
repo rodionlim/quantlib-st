@@ -1,5 +1,6 @@
 from copy import copy
 from dataclasses import dataclass
+from typing import Optional
 
 import datetime as datetime
 import pandas as pd
@@ -29,12 +30,12 @@ from quantlib_st.objects.dict_of_futures_per_contract_prices import (
 
 @dataclass
 class singleRowMultiplePrices:
-    price: float = None
-    carry: float = None
-    forward: float = None
-    price_contract: str = None
-    carry_contract: str = None
-    forward_contract: str = None
+    price: Optional[float] = None
+    carry: Optional[float] = None
+    forward: Optional[float] = None
+    price_contract: Optional[str] = None
+    carry_contract: Optional[str] = None
+    forward_contract: Optional[str] = None
 
     def concat_with_multiple_prices(self, multiple_prices, timedelta_seconds=1):
         new_time_index = multiple_prices.index[-1] + datetime.timedelta(
@@ -70,7 +71,7 @@ class singleRowMultiplePrices:
 class futuresMultiplePrices(pd.DataFrame):
     def __init__(self, data):
         _check_valid_multiple_price_data(data)
-        super().__init__(data)
+        super().__init__(data)  # type: ignore
 
         data.index.name = "index"  # arctic compatible
 
@@ -152,7 +153,7 @@ class futuresMultiplePrices(pd.DataFrame):
                     self[contract_column_name],
                     price_column_name=price_column_name,
                 )
-            )
+            )  # type: ignore
 
         self_as_dict = dictFuturesNamedContractFinalPricesWithContractID(self_as_dict)
 
@@ -194,7 +195,7 @@ class futuresMultiplePrices(pd.DataFrame):
 
         return multiple_prices_object
 
-    def sort_index(self):
+    def sort_index(self):  # type: ignore
         df = pd.DataFrame(self)
         sorted_df = df.sort_index()
 

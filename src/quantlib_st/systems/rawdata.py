@@ -9,7 +9,7 @@ from quantlib_st.core.exceptions import missingData
 from quantlib_st.systems.stage import SystemStage
 from quantlib_st.systems.system_cache import input, diagnostic, output
 
-from quantlib_st.sysdata.sim.futures_sim_data import futuresSimData
+from quantlib_st.sysdata.sim.futures_sim_data import simData
 from quantlib_st.config.configdata import Config
 
 from quantlib_st.objects.carry_data import rawCarryData
@@ -35,7 +35,7 @@ class RawData(SystemStage):
         return "rawdata"
 
     @property
-    def data_stage(self) -> futuresSimData:
+    def data_stage(self) -> simData:
         return self.parent.data
 
     @property
@@ -96,7 +96,7 @@ class RawData(SystemStage):
         return natural_prices
 
     @input
-    def get_hourly_prices(self, instrument_code: str) -> pd.Series:
+    def get_hourly_prices(self, instrument_code: str) -> pd.Series | pd.DataFrame:
         hourly_prices = self.data_stage.hourly_prices(instrument_code)
 
         return hourly_prices
@@ -128,7 +128,7 @@ class RawData(SystemStage):
         return dailyreturns
 
     @output()
-    def hourly_returns(self, instrument_code: str) -> pd.Series:
+    def hourly_returns(self, instrument_code: str) -> pd.Series | pd.DataFrame:
         """
         Gets hourly returns (not % returns)
 
@@ -212,6 +212,7 @@ class RawData(SystemStage):
         vol_multiplier = volconfig.pop("multiplier_to_get_daily_vol")
 
         volfunction = resolve_function(volconfig.pop("func"))
+        assert callable(volfunction)
         raw_vol = volfunction(price_returns, **volconfig)
 
         vol = vol_multiplier * raw_vol
@@ -406,12 +407,6 @@ class RawData(SystemStage):
         ## allows ultimate flexibility when creating trading rules but be careful!
 
         return self.parent
-
-    @diagnostic()
-    def instrument_code(self, instrument_code: str) -> pd.Series:
-        ## allows ultimate flexibility when creating trading rules
-
-        return instrument_code
 
     @output()
     def normalised_price_for_asset_class(self, instrument_code: str) -> pd.Series:

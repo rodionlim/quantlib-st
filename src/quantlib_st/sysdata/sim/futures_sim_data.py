@@ -1,3 +1,6 @@
+from abc import ABC, abstractmethod
+
+import datetime
 import pandas as pd
 
 from quantlib_st.core.exceptions import missingInstrument
@@ -17,13 +20,23 @@ from quantlib_st.objects.dict_of_named_futures_per_contract_prices import (
     contract_name_from_column_name,
 )
 from quantlib_st.objects.rolls import rollParameters
+from typing import Literal
 
 price_contract_name = contract_name_from_column_name(price_name)
 carry_contract_name = contract_name_from_column_name(carry_name)
 forward_contract_name = contract_name_from_column_name(forward_name)
 
 
-class futuresSimData(simData):
+class futuresSimData(simData, ABC):
+    """
+    Base class for futures simulation data sources
+    Provides methods to access futures data
+
+    Minimally, we should implement:
+      1. get_backadjusted_futures_price (for continuous price series)
+      2. get_multiple_prices_from_start_date (unadjusted prices to calculate carry)
+    """
+
     def __repr__(self):
         return "futuresSimData object with %d instruments" % len(
             self.get_instrument_list()
@@ -66,10 +79,10 @@ class futuresSimData(simData):
         return len(self.daily_prices(instrument_code))
 
     def get_raw_price_from_start_date(
-        self, instrument_code: str, start_date
+        self, instrument_code: str, start_date: datetime.datetime
     ) -> pd.Series:
         """
-        For  futures the price is the backadjusted price
+        For futures, the price is the backadjusted price
 
         :param instrument_code:
         :return: price
@@ -210,16 +223,69 @@ class futuresSimData(simData):
     def get_spread_cost(self, instrument_code: str) -> float:
         raise NotImplementedError
 
+    @abstractmethod
     def get_backadjusted_futures_price(
         self, instrument_code: str
     ) -> futuresAdjustedPrices:
         """
+        Subclasses must implement this to return the continuous backadjusted price series.
 
-        :param instrument_code:
-        :return:
+        Implementers can use the helper method `_get_backadjusted_futures_price_from_multiple_prices`
+        to perform either 'diff_adjusted' or 'ratio_adjusted' calculations based on raw contract data.
+
+        :param instrument_code: The instrument code
+        :return: futuresAdjustedPrices (backadjusted series)
         """
 
         raise NotImplementedError()
+
+    def _get_backadjusted_futures_price_from_multiple_prices(
+        self,
+        instrument_code: str,
+        backadjust_methodology: Literal[
+            "diff_adjusted", "ratio_adjusted"
+        ] = "diff_adjusted",
+    ) -> futuresAdjustedPrices:
+        """
+        Helper to calculate backadjusted prices from raw multiple price data.
+
+        Logic:
+        1. Identify roll dates where PRICE_CONTRACT changes.
+        2. Calculate the 'jump' between PRICE and FORWARD at that moment.
+        3. Cumulatively apply these jumps/ratios backwards from the current price.
+        """
+        multiple_prices = self.get_multiple_prices(instrument_code)
+
+        # Identify rows where the contract is about to change (the day before the roll)
+        price_contract = multiple_prices[price_contract_name]
+        roll_mask = price_contract != price_contract.shift(-1)
+
+        # We only care about the last row of each contract (the roll trigger)
+        # Shift handles the fact that on 'roll day' we calculate based on previous day's gap
+        if backadjust_methodology == "diff_adjusted":
+            # Gap = Forward Contract Price - Traded Contract Price
+            gaps = (multiple_prices[forward_name] - multiple_prices[price_name]).where(
+                roll_mask, 0.0
+            )
+            # Accumulate gaps backwards
+            cumulative_adj = gaps.iloc[::-1].cumsum().iloc[::-1].shift(-1).fillna(0.0)
+            adjusted_series = multiple_prices[price_name] + cumulative_adj
+
+        elif backadjust_methodology == "ratio_adjusted":
+            # Ratio = Forward Contract Price / Traded Contract Price
+            ratios = (
+                multiple_prices[forward_name] / multiple_prices[price_name]
+            ).where(roll_mask, 1.0)
+            # Accumulate ratios backwards
+            cumulative_adj = (
+                ratios.iloc[::-1].cumprod().iloc[::-1].shift(-1).fillna(1.0)
+            )
+            adjusted_series = multiple_prices[price_name] * cumulative_adj
+
+        else:
+            raise ValueError(f"Unknown methodology: {backadjust_methodology}")
+
+        return futuresAdjustedPrices(adjusted_series)
 
     def get_multiple_prices(self, instrument_code: str) -> futuresMultiplePrices:
         start_date = self.start_date_for_data()
@@ -228,13 +294,31 @@ class futuresSimData(simData):
             instrument_code, start_date=start_date
         )
 
+    @abstractmethod
     def get_multiple_prices_from_start_date(
-        self, instrument_code: str, start_date
+        self, instrument_code: str, start_date: datetime.datetime
     ) -> futuresMultiplePrices:
+        """
+        Get several different futures prices and contract IDs for an instrument.
+
+        Subclasses must implement this to return a futuresMultiplePrices object (a pd.DataFrame)
+        with exactly following columns:
+        - PRICE: The price of the contract currently held (traded).
+        - CARRY: The price of the adjacent contract used for carry calculations.
+        - FORWARD: The price of the next contract used for roll/forward calculations.
+        - PRICE_CONTRACT: Expiry (YYYYMM) of the 'PRICE' contract (e.g., '202406').
+        - CARRY_CONTRACT: Expiry (YYYYMM) of the 'CARRY_CONTRACT' contract.
+        - FORWARD_CONTRACT: Expiry (YYYYMM) of the 'FORWARD_CONTRACT' contract.
+
+        :param instrument_code: Instrument code (e.g., 'CRUDE_OIL')
+        :param start_date: Start date for the data (inclusive)
+        :return: futuresMultiplePrices object containing the requested columns, indexed by datetime
+        """
+
         raise NotImplementedError()
 
     def get_instrument_meta_data(
-        self, instrument_code
+        self, instrument_code: str
     ) -> futuresInstrumentWithMetaData:
         """
         Get a futures instrument where the meta data is cost data

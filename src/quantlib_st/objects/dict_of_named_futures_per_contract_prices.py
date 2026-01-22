@@ -1,5 +1,7 @@
 import pandas as pd
 
+from typing import Literal, get_args
+
 from quantlib_st.core.pandas.merge_data_with_label_column import (
     merge_data_series_with_label_column,
 )
@@ -10,13 +12,16 @@ from quantlib_st.objects.contract_dates_and_expiries import listOfContractDateSt
 price_name = "PRICE"
 carry_name = "CARRY"
 forward_name = "FORWARD"
+
+price_column_names_literal = Literal["PRICE", "CARRY", "FORWARD"]
+
 price_column_names = dict(CARRY=carry_name, PRICE=price_name, FORWARD=forward_name)
-list_of_price_column_names = list(price_column_names.values())
+list_of_price_column_names = list(get_args(price_column_names_literal))
 list_of_price_column_names.sort()
 contract_suffix = "_CONTRACT"
 
 
-def contract_name_from_column_name(column_name):
+def contract_name_from_column_name(column_name: price_column_names_literal) -> str:
     return column_name + contract_suffix
 
 
@@ -48,37 +53,33 @@ def _check_key_list_is_valid_against_names(some_dict):
         )
 
 
-class futuresNamedContractFinalPricesWithContractID(pd.DataFrame):
+class futuresNamedContractFinalPricesWithContractID:
     """
-    Just the final prices from a futures contract, plus
-    Columns are named 'NAME' and 'NAME_CONTRACT'
+    Just the final prices from a futures contract, plus contract IDs.
+    Encapsulates a pd.DataFrame with columns: [price_column_name, contract_column_name]
     """
 
     def __init__(
         self,
         ts_of_prices: pd.Series,
         ts_of_contracts: pd.Series,
-        price_column_name: str = list_of_price_column_names[0],
+        price_column_name: price_column_names_literal = "PRICE",
     ):
-        """
-
-        :param price_and_contract_data: pd.DataFrame with two columns
-        :param column_name: column name for price
-        """
         assert price_column_name in list_of_price_column_names
 
-        price_and_contract_data = pd.concat([ts_of_prices, ts_of_contracts], axis=1)
-
+        df = pd.concat([ts_of_prices, ts_of_contracts], axis=1)
         contract_column_name = price_column_name + contract_suffix
-        price_and_contract_data.columns = [price_column_name, contract_column_name]
+        df.columns = [price_column_name, contract_column_name]
 
-        super().__init__(price_and_contract_data)
-
-        self._price_column_name = price_column_name
+        self._df = df
+        self._price_column_name: price_column_names_literal = price_column_name
         self._contract_column_name = contract_column_name
 
+    def __len__(self) -> int:
+        return len(self._df)
+
     @property
-    def price_column_name(self) -> str:
+    def price_column_name(self) -> price_column_names_literal:
         return self._price_column_name
 
     @property
@@ -87,21 +88,21 @@ class futuresNamedContractFinalPricesWithContractID(pd.DataFrame):
 
     @property
     def prices(self) -> pd.Series:
-        return self[self.price_column_name]
+        return self._df[self.price_column_name]
 
     @property
     def ts_of_contract_str(self) -> pd.Series:
-        return self[self.contract_column_name]
+        return self._df[self.contract_column_name]
 
-    def as_pd(self):
-        return pd.DataFrame(self)
+    def as_pd(self) -> pd.DataFrame:
+        return self._df
 
     @classmethod
     def create_with_single_contractid(
-        futuresNamedContractFinalPricesWithContractID,
+        cls,
         ts_of_prices: pd.Series,
         contractid: str,
-        price_column_name=price_name,
+        price_column_name: price_column_names_literal = price_name,
     ):
         """
 
@@ -114,9 +115,7 @@ class futuresNamedContractFinalPricesWithContractID(pd.DataFrame):
         contract_data = [contractid] * len(ts_of_prices)
         ts_of_contracts = pd.Series(contract_data, index=ts_of_prices.index)
 
-        return futuresNamedContractFinalPricesWithContractID(
-            ts_of_prices, ts_of_contracts, price_column_name=price_column_name
-        )
+        return cls(ts_of_prices, ts_of_contracts, price_column_name=price_column_name)
 
     def prices_after_date(self, date_slice):
         prices = self.prices[date_slice:]
@@ -179,8 +178,8 @@ def _merge_futures_contract_final_prices_with_contract_id(
     contract_column_name = original_data.contract_column_name
 
     merged_data_as_pd = merge_data_series_with_label_column(
-        original_data,
-        new_data,
+        original_data.as_pd(),
+        new_data.as_pd(),
         data_column=price_column_name,
         label_column=contract_column_name,
     )
@@ -267,7 +266,7 @@ class dictFuturesNamedContractFinalPricesWithContractID(dict):
 
     @classmethod
     def create_from_two_dicts(
-        dictFuturesNamedContractFinalPricesWithContractID,
+        cls,
         dict_of_final_prices: dictNamedFuturesContractFinalPrices,
         dict_of_contract_ids: setOfNamedContracts,
     ):
@@ -293,7 +292,7 @@ class dictFuturesNamedContractFinalPricesWithContractID(dict):
             )
             new_dict[key] = prices_with_contractid
 
-        return dictFuturesNamedContractFinalPricesWithContractID(new_dict)
+        return cls(new_dict)
 
     def merge_data(self, new_price_dict):
         """

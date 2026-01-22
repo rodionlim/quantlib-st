@@ -2,11 +2,11 @@ from copy import copy
 from typing import Any, TYPE_CHECKING
 
 from quantlib_st.core.objects import get_class_name
-from quantlib_st.core.constants import arg_not_supplied
+from quantlib_st.core.constants import arg_not_supplied, named_object
 from quantlib_st.core.fileutils import get_resolved_pathname
 from quantlib_st.core.text import camel_case_split
 from quantlib_st.logging.logger import get_logger
-from quantlib_st.logging.adaptor import COMPONENT_LOG_LABEL
+from quantlib_st.logging.adaptor import COMPONENT_LOG_LABEL, DynamicAttributeLogger
 
 if TYPE_CHECKING:
     from quantlib_st.sysdata.production_config import Config  # pragma: no cover
@@ -23,13 +23,13 @@ if TYPE_CHECKING:
 class dataBlob(object):
     def __init__(
         self,
-        class_list: list = arg_not_supplied,
+        class_list: list | named_object = arg_not_supplied,
         log_name: str = "",
-        csv_data_paths: dict = arg_not_supplied,
-        parquet_store_path: str = arg_not_supplied,
+        csv_data_paths: dict[str, str] | named_object = arg_not_supplied,
+        parquet_store_path: str | named_object = arg_not_supplied,
         ib_conn: Any = arg_not_supplied,
         mongo_db: Any = arg_not_supplied,
-        log=arg_not_supplied,
+        log: DynamicAttributeLogger | named_object = arg_not_supplied,
         keep_original_prefix: bool = False,
     ):
         """
@@ -188,7 +188,7 @@ class dataBlob(object):
 
         return resolved_instance
 
-    def _get_csv_paths_for_class(self, class_object) -> str:
+    def _get_csv_paths_for_class(self, class_object) -> str | named_object:
         class_name = get_class_name(class_object)
         csv_data_paths = self.csv_data_paths
         if csv_data_paths is arg_not_supplied:
@@ -205,7 +205,7 @@ class dataBlob(object):
         return datapath
 
     @property
-    def csv_data_paths(self) -> dict:
+    def csv_data_paths(self) -> dict | named_object:
         csv_data_paths = getattr(self, "_csv_data_paths", arg_not_supplied)
 
         return csv_data_paths

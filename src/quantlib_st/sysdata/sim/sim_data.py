@@ -1,5 +1,7 @@
-import pandas as pd
 import datetime
+import pandas as pd
+
+from typing import TYPE_CHECKING
 
 from quantlib_st.core.exceptions import missingData
 from quantlib_st.core.objects import get_methods
@@ -8,10 +10,13 @@ from quantlib_st.core.pandas.frequency import (
     get_intraday_pdf_at_frequency,
     resample_prices_to_business_day_index,
 )
-from quantlib_st.sysdata.sim.base_data import baseData
 from quantlib_st.logging.logger import *
-from quantlib_st.objects.spot_fx_prices import fxPrices
 from quantlib_st.objects.instruments import instrumentCosts
+from quantlib_st.objects.spot_fx_prices import fxPrices
+from quantlib_st.sysdata.sim.base_data import baseData
+
+if TYPE_CHECKING:
+    from quantlib_st.systems.basesystem import System
 
 
 class simData(baseData):
@@ -37,7 +42,7 @@ class simData(baseData):
     def __repr__(self):  # type: ignore
         return "simData object with %d instruments" % len(self.get_instrument_list())
 
-    def __getitem__(self, keyname: str):
+    def __getitem__(self, keyname: str):  # type: ignore
         """
          convenience method to get the price, make it look like a dict
 
@@ -50,7 +55,7 @@ class simData(baseData):
 
         return price
 
-    def keys(self) -> list:
+    def keys(self) -> list[str]:
         """
         list of instruments in this data set
 
@@ -85,7 +90,7 @@ class simData(baseData):
             start_date = self._get_and_set_start_date_for_data_from_config()
         return start_date
 
-    def _get_and_set_start_date_for_data_from_config(self) -> datetime:
+    def _get_and_set_start_date_for_data_from_config(self) -> datetime.datetime:
         start_date = _resolve_start_date(self)
         self._start_date_for_data_from_config = start_date
 
@@ -126,12 +131,12 @@ class simData(baseData):
 
         return dailyprice
 
-    def hourly_prices(self, instrument_code: str) -> pd.Series:
+    def hourly_prices(self, instrument_code: str) -> pd.Series | pd.DataFrame:
         return self._get_hourly_prices_for_directional_instrument(instrument_code)
 
     def _get_hourly_prices_for_directional_instrument(
         self, instrument_code: str
-    ) -> pd.Series:
+    ) -> pd.Series | pd.DataFrame:
         instrprice = self.get_raw_price(instrument_code)
         if len(instrprice) == 0:
             raise Exception("No adjusted hourly prices for %s" % instrument_code)
@@ -204,7 +209,7 @@ class simData(baseData):
         """
         raise NotImplementedError("Need to inherit from simData")
 
-    def get_instrument_list(self) -> list:
+    def get_instrument_list(self) -> list[str]:
         """
         list of instruments in this data set
 
@@ -265,6 +270,49 @@ class simData(baseData):
             "Need to inherit from base class for specific data source"
         )
 
+    def asset_class_for_instrument(self, instrument_code: str) -> str:
+        """
+        Get the asset class for a particular instrument
+
+        :param instrument_code: instrument to value for
+        :type instrument_code: str
+
+        :returns: str
+
+        """
+
+        raise NotImplementedError(
+            "Need to inherit from base class for specific data source"
+        )
+
+    def get_rolls_per_year(self, instrument_code: str) -> int:
+        """
+        Gets number of rolls per year for an instrument
+
+         :param instrument_code: instrument to get carry data for
+        :type instrument_code: str
+
+        :returns: int
+
+        """
+
+        raise NotImplementedError("Need to inherit for a specific data source")
+
+    def get_instrument_raw_carry_data(self, instrument_code: str) -> pd.DataFrame:
+        """
+        Gets carry data for an instrument
+        """
+        raise NotImplementedError("Need to inherit for a specific data source")
+
+    def all_instruments_in_asset_class(self, asset_class: str) -> list:
+        """
+        Return all the instruments in a given asset class
+
+        :param asset_class: str
+        :return: list of instrument codes
+        """
+        raise NotImplementedError("Need to inherit for a specific data source")
+
     def _get_fx_data(self, currency1: str, currency2: str) -> fxPrices:
         """
         Get the FX rate currency1/currency2 between two currencies
@@ -294,7 +342,7 @@ class simData(baseData):
         raise NotImplementedError("Need to inherit for a specific data source")
 
 
-def _resolve_start_date(sim_data: simData):
+def _resolve_start_date(sim_data: simData) -> datetime.datetime:
     try:
         config = _resolve_config(sim_data)
     except missingData:

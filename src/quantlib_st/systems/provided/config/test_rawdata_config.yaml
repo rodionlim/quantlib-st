@@ -1,0 +1,20 @@
+trading_rules:
+  ewmac8:
+    function: systems.provided.rules.ewmac.ewmac_forecast_with_defaults_no_vol
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 8
+      Lslow: 32
+    forecast_scalar: 5.3
+  ewmac16:
+    function: systems.provided.rules.ewmac.ewmac_forecast_with_defaults_no_vol
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 16
+      Lslow: 64
+    forecast_scalar: 7.5
+forecast_cap: 21.0

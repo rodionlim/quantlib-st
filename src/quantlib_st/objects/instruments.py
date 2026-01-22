@@ -1,4 +1,4 @@
-from quantlib_st.core.constants import arg_not_supplied
+from quantlib_st.core.constants import arg_not_supplied, named_object
 from quantlib_st.core.genutils import flatten_list
 
 from dataclasses import dataclass
@@ -220,7 +220,7 @@ class assetClassesAndInstruments(dict):
         return pd.Series(asset_classes, index=instruments)
 
     def all_instruments_in_asset_class(
-        self, asset_class: str, must_be_in=arg_not_supplied
+        self, asset_class: str, must_be_in: list | named_object = arg_not_supplied
     ) -> list:
         asset_class_instrument_list = [
             instrument

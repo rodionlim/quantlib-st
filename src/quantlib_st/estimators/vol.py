@@ -129,7 +129,9 @@ def mixed_vol_calc(
     **ignored_kwargs,
 ) -> pd.Series:
     """
-    Robust exponential volatility calculation, assuming daily series of prices
+    Blending short-term (robust) vol with a long-term slow vol component,
+    assuming daily series of prices.
+
     We apply an absolute minimum level of vol (absmin);
     and a volfloor based on lowest vol over recent history
 
