@@ -1,3 +1,10 @@
+## [1.9.0] - 2026-01-22
+
+### 🚀 Features
+
+- Add carry tests
+- *(futures)* Add helper methods to backadjust futures
+
 ## [1.8.0] - 2026-01-19
 
 ### 🚀 Features
