@@ -1,3 +1,5 @@
+import pandas as pd
+
 from quantlib_st.logging.logger import *
 
 
@@ -33,14 +35,14 @@ class baseData(object):
 
         self._log = log
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "baseData object"
 
     @property
     def log(self):
         return self._log
 
-    def __getitem__(self, keyname):
+    def __getitem__(self, keyname) -> pd.DataFrame:
         """
          convenience method to get the price, make it look like a dict
 

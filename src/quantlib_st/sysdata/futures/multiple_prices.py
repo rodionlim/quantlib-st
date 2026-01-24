@@ -12,7 +12,6 @@ They can be stored, or worked out 'on the fly'
 
 from quantlib_st.core.exceptions import existingData
 from quantlib_st.sysdata.base_data import baseData
-from quantlib_st.logging.logger import get_logger
 
 # These are used when inferring prices in an incomplete series
 from quantlib_st.objects.multiple_prices import futuresMultiplePrices
@@ -48,7 +47,6 @@ class futuresMultiplePricesData(baseData):
         return multiple_prices
 
     def delete_multiple_prices(self, instrument_code: str, are_you_sure=False):
-        log_attrs = {INSTRUMENT_CODE_LOG_LABEL: instrument_code, "method": "temp"}
 
         if are_you_sure:
             if self.is_code_in_data(instrument_code):
@@ -57,7 +55,8 @@ class futuresMultiplePricesData(baseData):
                 )
                 self.log.info(
                     "Deleted multiple price data for %s" % instrument_code,
-                    **log_attrs,
+                    instrument_code=instrument_code,
+                    method="temp",
                 )
 
             else:
@@ -65,12 +64,14 @@ class futuresMultiplePricesData(baseData):
                 self.log.warning(
                     "Tried to delete non existent multiple prices for %s"
                     % instrument_code,
-                    **log_attrs,
+                    instrument_code=instrument_code,
+                    method="temp",
                 )
         else:
             self.log.error(
                 "You need to call delete_multiple_prices with a flag to be sure",
-                **log_attrs,
+                instrument_code=instrument_code,
+                method="temp",
             )
             raise Exception("You need to be sure!")
 
@@ -86,7 +87,6 @@ class futuresMultiplePricesData(baseData):
         multiple_price_data: futuresMultiplePrices,
         ignore_duplication=False,
     ):
-        log_attrs = {INSTRUMENT_CODE_LOG_LABEL: instrument_code, "method": "temp"}
         if self.is_code_in_data(instrument_code):
             if ignore_duplication:
                 pass
@@ -94,7 +94,8 @@ class futuresMultiplePricesData(baseData):
                 self.log.error(
                     "There is already %s in the data, you have to delete it first"
                     % instrument_code,
-                    **log_attrs,
+                    instrument_code=instrument_code,
+                    method="temp",
                 )
                 raise existingData
 
@@ -102,7 +103,11 @@ class futuresMultiplePricesData(baseData):
             instrument_code, multiple_price_data
         )
 
-        self.log.info("Added data for instrument %s" % instrument_code, **log_attrs)
+        self.log.info(
+            "Added data for instrument %s" % instrument_code,
+            instrument_code=instrument_code,
+            method="temp",
+        )
 
     def _add_multiple_prices_without_checking_for_existing_entry(
         self, instrument_code: str, multiple_price_data: futuresMultiplePrices

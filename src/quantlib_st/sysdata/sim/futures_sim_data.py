@@ -117,7 +117,7 @@ class futuresSimData(simData, ABC):
 
     def get_current_and_forward_price_data(self, instrument_code: str) -> pd.DataFrame:
         """
-        Returns a pd. dataframe with the 4 columns PRICE, PRICE_CONTRACT, FORWARD_, FORWARD_CONTRACT
+        Returns a pd. dataframe with the 4 columns PRICE, PRICE_CONTRACT, FORWARD, FORWARD_CONTRACT
 
         These are required if we want to backadjust from scratch
 

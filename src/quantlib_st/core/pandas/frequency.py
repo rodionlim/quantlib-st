@@ -16,6 +16,30 @@ from quantlib_st.core.dateutils import (
 )
 
 
+def closing_date_rows_in_pd_object(
+    pd_object: Union[pd.DataFrame, pd.Series],
+    closing_time: pd.DateOffset = NOTIONAL_CLOSING_TIME_AS_PD_OFFSET,
+) -> Union[pd.DataFrame, pd.Series]:
+    """
+    >>> import datetime
+    >>> d = datetime.datetime
+    >>> date_index = [d(2000,1,1,15),d(2000,1,1,23), d(2000,1,2,15)]
+    >>> df = pd.DataFrame(dict(a=[1, 2, 3], b=[4 , 6, 5]), index=date_index)
+    >>> closing_date_rows_in_pd_object(df)
+                         a  b
+    2000-01-01 23:00:00  2  6
+
+    """
+    return pd_object[
+        [
+            check_time_matches_closing_time_to_second(
+                index_entry=index_entry, closing_time=closing_time
+            )
+            for index_entry in pd_object.index
+        ]
+    ]
+
+
 def resample_prices_to_business_day_index(x: pd.Series) -> pd.Series:
     """Resample prices to a business-day index by taking the last available price.
 
@@ -124,6 +148,49 @@ def infer_frequency(
 UPPER_BOUND_HOUR_FRACTION_OF_A_DAY = 1.0 / 2.0
 LOWER_BOUND_HOUR_FRACTION_OF_A_DAY = 1.0 / HOURS_PER_DAY
 BUSINESS_CALENDAR_FRACTION = CALENDAR_DAYS_IN_YEAR / BUSINESS_DAYS_IN_YEAR
+
+
+def sumup_business_days_over_pd_series_without_double_counting_of_closing_data(
+    pd_series: pd.Series,
+    closing_time: pd.DateOffset = NOTIONAL_CLOSING_TIME_AS_PD_OFFSET,
+) -> pd.Series:
+    """
+    Used for volume data - adds up a series over a day to get a daily total
+
+    Uses closing values when available, otherwise sums up intraday values
+
+    >>> import datetime
+    >>> d = datetime.datetime
+    >>> date_index1 = [d(2000,2,1,15),d(2000,2,1,16), d(2000,2,1,23), ]
+    >>> s1 = pd.Series([10,5,17], index=date_index1)
+    >>> sumup_business_days_over_pd_series_without_double_counting_of_closing_data(s1)
+    2000-02-01    17
+    Freq: B, Name: 0, dtype: int64
+    >>> date_index1 = [d(2000,2,1,15),d(2000,2,1,16), d(2000,2,2,23) ]
+    >>> s1 = pd.Series([10,5,2], index=date_index1)
+    >>> sumup_business_days_over_pd_series_without_double_counting_of_closing_data(s1)
+    2000-02-01    15.0
+    2000-02-02     2.0
+    Freq: B, Name: 0, dtype: float64
+    """
+    intraday_data = intraday_date_rows_in_pd_object(
+        pd_series, closing_time=closing_time
+    )
+    if len(intraday_data) == 0:
+        return pd_series
+
+    intraday_data_summed = intraday_data.resample("1B").sum()
+    intraday_data_summed.name = "intraday"
+
+    closing_data = closing_date_rows_in_pd_object(pd_series)
+    closing_data_summed = closing_data.resample("1B").sum()
+
+    both_sets_of_data = pd.concat([intraday_data_summed, closing_data_summed], axis=1)
+    both_sets_of_data[both_sets_of_data == 0] = np.nan
+    joint_data = both_sets_of_data.ffill(axis=1)
+    joint_data = joint_data.iloc[:, 1]
+
+    return joint_data
 
 
 def infer_frequency_approx(df_or_ts: Union[pd.DataFrame, pd.Series]) -> Frequency:

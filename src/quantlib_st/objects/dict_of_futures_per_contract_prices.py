@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 import pandas as pd
 
-from quantlib_st.core.constants import arg_not_supplied
+from quantlib_st.core.constants import arg_not_supplied, named_object
 from quantlib_st.core.exceptions import missingData
 from quantlib_st.objects.contract_dates_and_expiries import listOfContractDateStr
 
@@ -48,14 +48,19 @@ class dictFuturesContractFinalPrices(dict):
 
         return joint_data
 
-    def matched_prices(self, contracts_to_match=arg_not_supplied) -> pd.DataFrame:
+    def matched_prices(
+        self, contracts_to_match: named_object | str | list[str] = arg_not_supplied
+    ) -> pd.DataFrame:
         # Return pd.DataFrame where we only have prices in all contracts
 
         if contracts_to_match is arg_not_supplied:
-            contracts_to_match = self.keys()
+            contracts_to_match = list(self.keys())
+
+        if isinstance(contracts_to_match, str):
+            contracts_to_match = [contracts_to_match]
 
         joint_data = self.joint_data()
-        joint_data_to_match = joint_data[contracts_to_match]
+        joint_data_to_match = joint_data[list(contracts_to_match)]  # type: ignore
 
         matched_data = joint_data_to_match.dropna()
 
@@ -126,9 +131,9 @@ class dictFuturesContractPrices(dict):
 
 def get_last_matched_date_and_prices_for_contract_list(
     dict_of_prices: dictFuturesContractPrices,
-    contracts_to_match: list,
+    contracts_to_match: list[str] | str,
     list_of_contract_date_str: list,
-) -> (datetime.datetime, list):
+) -> tuple[datetime.datetime, list]:
     dict_of_final_prices = dict_of_prices.final_prices()
 
     try:
