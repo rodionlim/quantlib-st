@@ -27,6 +27,7 @@ class rollCalendarWithRollIndex:
         self.rolling_row_index = self.rolling_row_index + 1
 
     def not_end_of_calendar(self):
+        assert self.roll_calendar is not None
         return self.rolling_row_index < len(self.roll_calendar.index)
 
     def data_now_added(self):
@@ -130,6 +131,7 @@ def _calc_roll_date_info(
     roll_calendar = roll_calendar_with_roll_index.roll_calendar
     rolling_row_index = roll_calendar_with_roll_index.rolling_row_index
 
+    assert roll_calendar is not None
     last_roll_date = roll_calendar.index[rolling_row_index - 1]
     next_roll_date = roll_calendar.index[rolling_row_index]
 

@@ -78,10 +78,10 @@ class futuresMultiplePrices(pd.DataFrame):
     @classmethod
     ## NOT TYPE CHECKING OF ROLL_CALENDAR AS WOULD CAUSE CIRCULAR IMPORT
     def create_from_raw_data(
-        futuresMultiplePrices,
+        cls,
         roll_calendar,
         dict_of_futures_contract_closing_prices: dictFuturesContractFinalPrices,
-    ):
+    ) -> "futuresMultiplePrices":
         """
 
         :param roll_calendar: rollCalendar
@@ -94,20 +94,20 @@ class futuresMultiplePrices(pd.DataFrame):
             roll_calendar, dict_of_futures_contract_closing_prices
         )
 
-        multiple_prices = futuresMultiplePrices(all_price_data_stack)
+        multiple_prices = cls(all_price_data_stack)
         multiple_prices._is_empty = False
 
         return multiple_prices
 
     @classmethod
-    def create_empty(futuresMultiplePrices):
+    def create_empty(cls) -> "futuresMultiplePrices":
         """
         Our graceful fail is to return an empty, but valid, dataframe
         """
 
         data = pd.DataFrame(columns=multiple_data_columns)
 
-        multiple_prices = futuresMultiplePrices(data)
+        multiple_prices = cls(data)
 
         return multiple_prices
 
@@ -116,7 +116,7 @@ class futuresMultiplePrices(pd.DataFrame):
         for colname in list_of_price_column_names:
             new_version[colname] = 1 / self[colname]
 
-        return futuresMultiplePrices(new_version)
+        return type(self)(new_version)
 
     def add_offset_to_prices(self, offset: float):
         new_version = copy(self)
@@ -161,9 +161,9 @@ class futuresMultiplePrices(pd.DataFrame):
 
     @classmethod
     def from_merged_dict(
-        futuresMultiplePrices,
+        cls,
         prices_dict: dictFuturesNamedContractFinalPricesWithContractID,
-    ):
+    ) -> "futuresMultiplePrices":
         """
         Re-create from dict, eg results of _as_dict
 
@@ -191,7 +191,7 @@ class futuresMultiplePrices(pd.DataFrame):
             multiple_prices_data_frame[list_of_contract_column_names].ffill()
         )
 
-        multiple_prices_object = futuresMultiplePrices(multiple_prices_data_frame)
+        multiple_prices_object = cls(multiple_prices_data_frame)
 
         return multiple_prices_object
 

@@ -16,7 +16,9 @@ forward_name = "FORWARD"
 price_column_names_literal = Literal["PRICE", "CARRY", "FORWARD"]
 
 price_column_names = dict(CARRY=carry_name, PRICE=price_name, FORWARD=forward_name)
-list_of_price_column_names = list(get_args(price_column_names_literal))
+list_of_price_column_names: list[price_column_names_literal] = list(
+    get_args(price_column_names_literal)
+)
 list_of_price_column_names.sort()
 contract_suffix = "_CONTRACT"
 

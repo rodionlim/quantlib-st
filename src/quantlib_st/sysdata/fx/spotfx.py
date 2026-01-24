@@ -131,7 +131,8 @@ class fxPricesData(baseData):
         if not self.is_code_in_data(code):
             self.log.warning(
                 "Currency %s is missing from list of FX data" % code,
-                **{CURRENCY_CODE_LOG_LABEL: code, "method": "temp"},
+                currency_code=code,
+                method="temp",
             )
 
             return fxPrices.create_empty()
@@ -141,26 +142,28 @@ class fxPricesData(baseData):
         return data
 
     def delete_fx_prices(self, code: str, are_you_sure=False):
-        log_attrs = {CURRENCY_CODE_LOG_LABEL: code, "method": "temp"}
 
         if are_you_sure:
             if self.is_code_in_data(code):
                 self._delete_fx_prices_without_any_warning_be_careful(code)
                 self.log.info(
                     "Deleted fx price data for %s" % code,
-                    **log_attrs,
+                    currency_code=code,
+                    method="temp",
                 )
 
             else:
                 # doesn't exist anyway
                 self.log.warning(
                     "Tried to delete non existent fx prices for %s" % code,
-                    **log_attrs,
+                    currency_code=code,
+                    method="temp",
                 )
         else:
             self.log.warning(
                 "You need to call delete_fx_prices with a flag to be sure",
-                **log_attrs,
+                currency_code=code,
+                method="temp",
             )
 
     def is_code_in_data(self, code: str) -> bool:
@@ -172,7 +175,6 @@ class fxPricesData(baseData):
     def add_fx_prices(
         self, code: str, fx_price_data: fxPrices, ignore_duplication: bool = False
     ):
-        log_attrs = {CURRENCY_CODE_LOG_LABEL: code, "method": "temp"}
         if self.is_code_in_data(code):
             if ignore_duplication:
                 pass
@@ -180,12 +182,15 @@ class fxPricesData(baseData):
                 self.log.warning(
                     "There is already %s in the data, you have to delete it first, or "
                     "set ignore_duplication=True, or use update_fx_prices" % code,
-                    **log_attrs,
+                    currency_code=code,
+                    method="temp",
                 )
                 return None
 
         self._add_fx_prices_without_checking_for_existing_entry(code, fx_price_data)
-        self.log.info("Added fx data for code %s" % code, **log_attrs)
+        self.log.info(
+            "Added fx data for code %s" % code, currency_code=code, method="temp"
+        )
 
     def update_fx_prices(
         self, code: str, new_fx_prices: fxPrices, check_for_spike=True

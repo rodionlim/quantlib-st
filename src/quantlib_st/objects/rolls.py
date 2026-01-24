@@ -58,7 +58,7 @@ class rollCycle(object):
 
     def _previous_year_month_given_tuple(
         self, year_value: int, month_str: str
-    ) -> (int, str):
+    ) -> tuple[int, str]:
         """
         Returns a tuple (year, month: str)
 
@@ -75,7 +75,7 @@ class rollCycle(object):
 
     def _next_year_month_given_tuple(
         self, year_value: int, month_str: str
-    ) -> (int, str):
+    ) -> tuple[int, str]:
         """
         Returns a tuple (year, month: str)
 
@@ -261,8 +261,8 @@ class rollParameters(object):
         return self._global_rollcycle
 
     @classmethod
-    def create_from_dict(rollData, roll_data_dict: dict):
-        futures_instrument_roll_data = rollData(**roll_data_dict)
+    def create_from_dict(cls, roll_data_dict: dict):
+        futures_instrument_roll_data = cls(**roll_data_dict)
 
         return futures_instrument_roll_data
 
