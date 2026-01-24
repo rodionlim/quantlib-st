@@ -1,3 +1,9 @@
+## [1.10.0] - 2026-01-24
+
+### 🚀 Features
+
+- *(futures)* Refactor futures price data handling and add CSV support
+
 ## [1.9.0] - 2026-01-22
 
 ### 🚀 Features
