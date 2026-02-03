@@ -97,3 +97,50 @@ For API-based implementations, it is common to:
 3. Handle missing data gracefully by returning `futuresContractPrices.create_empty()`.
 
 Refer to `csvFuturesContractPriceData` in `csv/csv_futures_contract_prices.py` for a reference implementation using local files.
+
+## Roll Parameters Explanation
+
+The `rollParameters` object (and corresponding configuration files like `rollconfig.csv`) controls how we construct continuous price series and manage position rolling. These parameters are critical for both backtesting (simulating realistic rolls) and production (generating correct signals).
+
+### `hold_rollcycle`
+
+**What it is:** A string of contract letter codes (e.g., `"HMUZ"` for March, June, Sept, Dec) representing the contracts we are allowed to hold positions in.
+**Why it is needed:**
+
+- **Liquidity:** Most futures markets have valid prices for many months, but liquidity is often concentrated in quarterly contracts. Rolling into an illiquid "serial" month (like August for S&P 500) would incur massive transaction costs (slippage).
+- **Execution:** This forces the system to skip illiquid months and stick to the "major" contracts where execution is cheap.
+
+### `priced_rollcycle`
+
+**What it is:** A string of all contract letter codes (e.g., `"FGHJKMNQUVXZ"` for all months) where the market provides valid, reliable pricing data.
+**Why it is needed:**
+
+- **Information Density:** We use this to calculate "Carry" (the shape of the futures curve). Even if we only _trade_ quarterly (`hold_rollcycle="HMUZ"`), checking the prices of monthly contracts (`priced_rollcycle="...All..."`) gives us a smoother, more granular signal of the curve's slope.
+- **Curve Smoother:** It prevents the carry signal from being "steppy" or "blocky" by allowing us to measure the roll yield over shorter timeframes (e.g., Mar vs Apr) rather than just long ones (Mar vs Jun).
+
+### `roll_offset_day`
+
+**What it is:** An integer indicating the target day to roll relative to the contract's expiry. Negative values mean days _before_ expiry.
+**Why it is needed:**
+
+- **Avoid Delivery:** Systematic trend following strategies never want to take physical delivery of commodities. We must exit before First Notice Day.
+- **Liquidity Management:** We want to roll when volume is high but before the "liquidity cliff" that occurs right at expiry. Rolling 5 days early (`-5`) is a common standard to balance liquidity vs. holding period.
+
+### `carry_offset`
+
+**What it is:** An integer defining which neighbor contract to use for calculating the Carry signal.
+
+- `+1`: Compare the contract we hold to the **Next** contract in the `priced_rollcycle`.
+- `-1`: Compare to the **Previous** contract.
+  **Why it is needed:**
+- **Yield Calculation:** Carry is calculated as a spread. To get an annualized roll yield, we need a pair of prices.
+- **Adjustment:** In the vast majority of cases (and in `rollconfig.csv`), this is set to **`1`**. This means "Compare the contract we are holding (Near) to the next one out (Far)".
+  - _Note:_ The code default in `rollParameters` handles `carry_offset` = `-1` (Previous) as a fallback, but the configuration usually overrides this to `1` to implement the standard `Near - Next` carry calculation (rolling down the curve).
+
+### `approx_expiry_offset`
+
+**What it is:** An integer (1-31) representing the approximate day of the month that contracts expire.
+**Why it is needed:**
+
+- **Calculation Simplification:** To calculate an annualized return, we need to know the time difference (in days) between two contracts.
+- **Heuristic:** Instead of maintaining a complex, maintenance-heavy database of every single exchange's exact Last Trading Day / First Notice Day rules (which change constantly), we approximate. Assuming all contracts expire on the "15th" (or whatever the offset is) is sufficient to calculate a statistically valid carry signal without the engineering headache of exact calendar management.
