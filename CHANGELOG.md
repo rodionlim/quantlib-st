@@ -1,3 +1,9 @@
+## [1.12.0] - 2026-02-13
+
+### 🚀 Features
+
+- *(account)* Allow for rounding when estimating pandl
+
 ## [1.11.0] - 2026-01-27
 
 ### 🚀 Features
