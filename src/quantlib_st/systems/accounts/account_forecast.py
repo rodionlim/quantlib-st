@@ -295,8 +295,8 @@ def pandl_for_instrument_forecast(
 
 def pandl_for_position(
     notional_position: pd.Series,
-    average_notional_position: pd.Series,
     price: pd.Series,
+    average_notional_position: Optional[pd.Series] = None,
     capital: float = ARBITRARY_FORECAST_CAPITAL,
     fx=None,
     daily_returns_volatility: Optional[pd.Series] = None,
@@ -305,6 +305,9 @@ def pandl_for_position(
     roundpositions: bool = False,
     value_per_point=ARBITRARY_VALUE_OF_PRICE_POINT,
 ) -> accountCurve:
+    if average_notional_position is None:
+        average_notional_position = pd.Series(1.0, index=price.index)
+
     pandl_calculator = pandlCalculationWithSRCosts(
         price,
         SR_cost=SR_cost,
