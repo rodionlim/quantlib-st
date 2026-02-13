@@ -1,3 +1,9 @@
+## [1.13.0] - 2026-02-13
+
+### 🚀 Features
+
+- *(account)* Make average notional position optional
+
 ## [1.12.0] - 2026-02-13
 
 ### 🚀 Features
