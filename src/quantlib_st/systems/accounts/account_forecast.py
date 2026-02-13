@@ -22,10 +22,17 @@ ARBITRARY_VALUE_OF_PRICE_POINT = 1.0
 class accountForecast(accountCosts):
     @diagnostic(not_pickable=True)
     def pandl_for_instrument_forecast_weighted_within_trading_rule(
-        self, instrument_code: str, rule_variation_name: str, delayfill: bool = True
+        self,
+        instrument_code: str,
+        rule_variation_name: str,
+        delayfill: bool = True,
+        roundpositions: bool = False,
     ) -> accountCurve:
         pandl_for_instrument_forecast = self.pandl_for_instrument_forecast(
-            instrument_code, rule_variation_name, delayfill=delayfill
+            instrument_code,
+            rule_variation_name,
+            delayfill=delayfill,
+            roundpositions=roundpositions,
         )
 
         weight = (
@@ -40,10 +47,17 @@ class accountForecast(accountCosts):
 
     @diagnostic(not_pickable=True)
     def pandl_for_instrument_forecast_weighted(
-        self, instrument_code: str, rule_variation_name: str, delayfill: bool = True
+        self,
+        instrument_code: str,
+        rule_variation_name: str,
+        delayfill: bool = True,
+        roundpositions: bool = False,
     ) -> accountCurve:
         pandl_for_instrument_forecast = self.pandl_for_instrument_forecast(
-            instrument_code, rule_variation_name, delayfill=delayfill
+            instrument_code,
+            rule_variation_name,
+            delayfill=delayfill,
+            roundpositions=roundpositions,
         )
 
         weight = self._normalised_weight_for_forecast_and_instrument(
@@ -156,7 +170,11 @@ class accountForecast(accountCosts):
 
     @diagnostic(not_pickable=True)
     def pandl_for_instrument_forecast(
-        self, instrument_code: str, rule_variation_name: str, delayfill: bool = True
+        self,
+        instrument_code: str,
+        rule_variation_name: str,
+        delayfill: bool = True,
+        roundpositions: bool = False,
     ) -> accountCurve:
         """
         Get the p&l for one instrument and forecast; as % of arbitrary capital
@@ -169,6 +187,9 @@ class accountForecast(accountCosts):
 
         :param delayfill: Lag fills by one day
         :type delayfill: bool
+
+        :param roundpositions: Round positions to nearest integer
+        :type roundpositions: bool
 
         :returns: accountCurve
 
@@ -219,6 +240,7 @@ class accountForecast(accountCosts):
             target_abs_forecast=target_abs_forecast,
             SR_cost=SR_cost,
             delayfill=delayfill,
+            roundpositions=roundpositions,
             value_per_point=value_per_point,
         )
 
@@ -235,6 +257,7 @@ def pandl_for_instrument_forecast(
     target_abs_forecast: float = 10.0,
     SR_cost=0.0,
     delayfill=True,
+    roundpositions: bool = False,
     value_per_point=ARBITRARY_VALUE_OF_PRICE_POINT,
 ) -> accountCurve:
     if daily_returns_volatility is None:
@@ -263,6 +286,7 @@ def pandl_for_instrument_forecast(
         capital=capital,
         value_per_point=value_per_point,
         delayfill=delayfill,
+        roundpositions=roundpositions,
         price=price,
     )
 
@@ -278,6 +302,7 @@ def pandl_for_position(
     daily_returns_volatility: Optional[pd.Series] = None,
     SR_cost=0.0,
     delayfill=True,
+    roundpositions: bool = False,
     value_per_point=ARBITRARY_VALUE_OF_PRICE_POINT,
 ) -> accountCurve:
     pandl_calculator = pandlCalculationWithSRCosts(
@@ -290,6 +315,7 @@ def pandl_for_position(
         capital=capital,
         value_per_point=value_per_point,
         delayfill=delayfill,
+        roundpositions=roundpositions,
     )
 
     return accountCurve(pandl_calculator)
