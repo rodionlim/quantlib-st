@@ -14,7 +14,7 @@ Minimal, self-contained CLI tools and library for quantitative finance.
 ## Modules
 
 - **[estimators](src/quantlib_st/estimators/README.md)**: Volatility and Forecast Scalar estimators — contains `robust_vol_calc` and `mixed_vol_calc` for daily volatility estimation, and `forecast_scalar` for scaling forecasts.
-- **[accounts](src/quantlib_st/accounts/README.md)**: P&L calculation framework — contains `account_forecast` for generating P&L curves from forecasts and prices.
+- **[accounts](src/quantlib_st/systems/accounts/README.md)**: P&L calculation framework — contains `account_forecast` for generating P&L curves from forecasts and prices.
 
 ## Install (editable - for developers)
 
