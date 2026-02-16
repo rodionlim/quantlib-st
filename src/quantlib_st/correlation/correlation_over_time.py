@@ -60,6 +60,7 @@ def correlation_over_time(
     frequency: str = "D",
     forward_fill_price_index: bool = True,
     is_price_series: bool = False,
+    signed_log_transform: bool = True,
     **kwargs,
 ) -> CorrelationList:
     """Construct a CorrelationList from a DataFrame of returns or prices.
@@ -86,17 +87,29 @@ def correlation_over_time(
     is_price_series : bool, optional
         If True, treat input as a price index and log-transform it. If False
         (default), treat input as log-normal returns.
+    signed_log_transform : bool, optional
+        If True (default), apply a signed-log transform when ``is_price_series``
+        to allow non-positive prices (e.g., spreads). If False, use ``np.log``
+        which requires strictly positive prices.
     **kwargs :
         All other keyword arguments are forwarded to :func:`compute_correlation_over_time`.
     """
     # 1. Determine the (log) Price Index
     if is_price_series:
         # Input is Price P; we want ln(P) so that diff() yields log-returns.
-        index_prices_for_correlation = pd.DataFrame(
-            np.log(data_for_correlation),
-            index=data_for_correlation.index,
-            columns=data_for_correlation.columns,
-        )
+        if signed_log_transform:
+            # Allow non-positive prices: sign(x) * log(1 + |x|).
+            index_prices_for_correlation = pd.DataFrame(
+                np.sign(data_for_correlation) * np.log1p(np.abs(data_for_correlation)),
+                index=data_for_correlation.index,
+                columns=data_for_correlation.columns,
+            )
+        else:
+            index_prices_for_correlation = pd.DataFrame(
+                np.log(data_for_correlation),
+                index=data_for_correlation.index,
+                columns=data_for_correlation.columns,
+            )
     else:
         # Input is log-normal returns; cumsum yields the log-price index.
         index_prices_for_correlation = data_for_correlation.cumsum()

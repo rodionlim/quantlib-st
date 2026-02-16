@@ -85,6 +85,15 @@ def add_corr_subcommand(subparsers: argparse._SubParsersAction) -> None:
         default=False,
         help="If true, treat input as prices. If false (default), treat as returns.",
     )
+    parser.add_argument(
+        "--signed-log-transform",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "If true (default), apply signed-log transform when --is-price-series "
+            "to allow non-positive prices."
+        ),
+    )
 
     parser.add_argument(
         "--index-col",
@@ -121,6 +130,7 @@ def run_corr(args: argparse.Namespace) -> int:
         frequency=args.frequency,
         forward_fill_price_index=args.forward_fill_price_index,
         is_price_series=args.is_price_series,
+        signed_log_transform=args.signed_log_transform,
         date_method=args.date_method,
         rollyears=args.rollyears,
         interval_frequency=args.interval_frequency,
