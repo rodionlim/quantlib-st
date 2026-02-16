@@ -19,6 +19,9 @@ cat sample_data/returns_10x4.csv | ./dist/quantlib corr
 - `--interval-frequency 12M`: Controls how often a new correlation matrix is emitted.
 - `--ew-lookback 250` and `--min-periods 20`: Parameters for EWMA estimation.
 - `--is-price-series`: Treat input data as price series and convert to lognormal returns.
+- `--signed-log-transform / --no-signed-log-transform`: When using `--is-price-series`,
+  apply a signed-log transform ($\mathrm{sign}(x)\cdot\log(1+|x|)$) to allow
+  non-positive prices (default: enabled).
 
 ### Key concepts
 
