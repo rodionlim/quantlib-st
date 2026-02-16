@@ -1,3 +1,9 @@
+## [1.14.0] - 2026-02-16
+
+### 🚀 Features
+
+- *(corr)* Allow negative price series
+
 ## [1.13.0] - 2026-02-13
 
 ### 🚀 Features
